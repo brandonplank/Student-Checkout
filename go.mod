@@ -7,13 +7,15 @@ require (
 	github.com/gofiber/template v1.6.22
 )
 
-//brandonplank.org/checkout/global => ./Global
-//brandonplank.org/checkout/models => ./Models
-replace brandonplank.org/checkout/routes => ./Routes
+replace (
+	//brandonplank.org/checkout/global => ./Global
+	brandonplank.org/checkout/models => ./Models
+	brandonplank.org/checkout/routes => ./Routes
+)
 
 require (
 	//brandonplank.org/checkout/global v0.0.0
-	//brandonplank.org/checkout/models v0.0.0
+	brandonplank.org/checkout/models v0.0.0
 	brandonplank.org/checkout/routes v0.0.0
 	github.com/andybalholm/brotli v1.0.2 // indirect
 	github.com/klauspost/compress v1.13.4 // indirect

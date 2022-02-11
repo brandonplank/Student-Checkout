@@ -33,10 +33,14 @@ func setupRoutes(app *fiber.App) {
 	app.Static("/", "./Public")
 
 	app.Get("/", routes.Home)
+	app.Post("/id/:name", routes.Id)
 }
 
 func main() {
 	log.Println("[START] Starting student checkout server")
+
+	routes.CreateLogFile()
+
 	engine := html.New("./Resources/Views", ".html")
 	router := fiber.New(fiber.Config{DisableStartupMessage: true, Views: engine})
 	setupRoutes(router)
