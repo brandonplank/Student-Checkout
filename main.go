@@ -3,16 +3,27 @@ package main
 import (
 	"brandonplank.org/checkout/routes"
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html"
 	"github.com/joho/godotenv"
 	"github.com/mileusna/crontab"
 	"log"
+	"os"
 	"strconv"
 )
 
 const Port = 8064
+
+func Auth(name string, password string) bool {
+	envUsername := os.Getenv("HART_USERNAME")
+	envPassword := os.Getenv("HART_PASSWORD")
+	if name == envUsername && password == envPassword {
+		return true
+	}
+	return false
+}
 
 func setupRoutes(app *fiber.App) {
 	app.Use(
@@ -32,9 +43,14 @@ func setupRoutes(app *fiber.App) {
 			ctx.Append("License", "BSD 3-Clause License")
 			return ctx.Next()
 		},
+		basicauth.New(basicauth.Config{
+			Authorizer:      Auth,
+			ContextUsername: "name",
+		}),
 	)
 
-	app.Static("/", "./Public")
+	//serve := app.Group("/assets")
+	app.Static("/assets", "./Public")
 
 	app.Get("/", routes.Home)
 	app.Post("/id/:name", routes.Id)
