@@ -50,7 +50,7 @@ func setupRoutes(app *fiber.App) {
 	)
 
 	//serve := app.Group("/assets")
-	app.Static("/assets", "./Public")
+	app.Static("/", "./Public")
 
 	app.Get("/", routes.Home)
 	app.Post("/id/:name", routes.Id)
