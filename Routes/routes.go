@@ -6,11 +6,15 @@ import (
 	"errors"
 	csv "github.com/gocarina/gocsv"
 	"github.com/gofiber/fiber/v2"
+	"github.com/jordan-wright/email"
 	"log"
+	"net/smtp"
 	"os"
 	"reflect"
 	"time"
 )
+
+const csvFileName = "classroom.csv"
 
 func remove(slice []string, s int) []string {
 	return append(slice[:s], slice[s+1:]...)
@@ -22,7 +26,7 @@ func ReverseSlice(data interface{}) {
 		panic(errors.New("data must be a slice type"))
 	}
 	valueLen := value.Len()
-	for i := 0; i <= int((valueLen-1)/2); i++ {
+	for i := 0; i <= (valueLen-1)/2; i++ {
 		reverseIndex := valueLen - 1 - i
 		tmp := value.Index(reverseIndex).Interface()
 		value.Index(reverseIndex).Set(value.Index(i))
@@ -42,7 +46,7 @@ func IsStudentOut(name string, students []*models.Student) bool {
 }
 
 func Home(ctx *fiber.Ctx) error {
-	return ctx.Render("main", fiber.Map{})
+	return ctx.Render("main", fiber.Map{"year": time.Now().Format("2006")})
 }
 
 func Id(ctx *fiber.Ctx) error {
@@ -56,7 +60,7 @@ func Id(ctx *fiber.Ctx) error {
 
 	name := string(nameData)
 
-	studentsFile, err := os.OpenFile("classroom.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -101,7 +105,7 @@ func Id(ctx *fiber.Ctx) error {
 
 func GetCSV(ctx *fiber.Ctx) error {
 	var students = []*models.Student{}
-	studentsFile, err := os.OpenFile("classroom.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusInternalServerError)
 	}
@@ -116,4 +120,32 @@ func GetCSV(ctx *fiber.Ctx) error {
 	content, _ := csv.MarshalBytes(students)
 
 	return ctx.Send(content)
+}
+
+func CSVFile(ctx *fiber.Ctx) error {
+	return ctx.SendFile(csvFileName, false)
+}
+
+func DoDailyStuff() {
+
+	pass := os.Getenv("PASSWORD")
+
+	e := email.NewEmail()
+	e.From = "Brandon Plank <planksprojects@gmail.com>"
+	e.To = []string{"susie.hart@rowan.kyschools.us", "brandon@brandonplank.org"}
+	// e.To = []string{"brandon@brandonplank.org"}
+	e.Subject = "Classroom Sign-Outs"
+	e.Text = []byte("This is an automated email")
+	e.AttachFile(csvFileName)
+	err := e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+	if err != nil {
+		log.Println(err)
+	}
+
+	err = os.Remove(csvFileName)
+	if err != nil {
+		log.Println("ono")
+	}
+	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	defer studentsFile.Close()
 }

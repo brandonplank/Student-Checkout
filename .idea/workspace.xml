@@ -5,20 +5,23 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="a690ac5f-078c-488d-bd76-b2ee233d3e2c" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Public/css/notifications.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Public/js/notifications.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/classroom.csv" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/Student-Checkout.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Student-Checkout.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Models/models.go" beforeDir="false" afterPath="$PROJECT_DIR$/Models/models.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Public/js/classroom.js" beforeDir="false" afterPath="$PROJECT_DIR$/Public/js/classroom.js" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.env" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Public/assets/css/Footer-Dark.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Public/assets/css/Navigation-Clean.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Public/assets/css/styles.css" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Public/favicon.ico" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Public/css/notifications.css" beforeDir="false" afterPath="$PROJECT_DIR$/Public/assets/css/notifications.css" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Public/js/classroom.js" beforeDir="false" afterPath="$PROJECT_DIR$/Public/assets/js/classroom.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Public/js/notifications.js" beforeDir="false" afterPath="$PROJECT_DIR$/Public/assets/js/notifications.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Resources/Views/main.html" beforeDir="false" afterPath="$PROJECT_DIR$/Resources/Views/main.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Routes/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/Routes/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Routes/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/Routes/go.sum" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Routes/routes.go" beforeDir="false" afterPath="$PROJECT_DIR$/Routes/routes.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/classroom.csv" beforeDir="false" afterPath="$PROJECT_DIR$/classroom.csv" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/go.sum" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/log.txt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/main.go" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -54,10 +57,15 @@
     <property name="go.modules.go.list.on.any.changes.was.set" value="true" />
     <property name="go.sdk.automatically.set" value="true" />
     <property name="go.watchers.conflict.with.on.save.actions.check.performed" value="true" />
-    <property name="last_opened_file_path" value="$USER_HOME$" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$/Public" />
   </component>
   <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\brand\Documents\Projects\Student-Checkout\Public" />
+    </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\brand\Documents\Projects\Student-Checkout\Public\assets\css" />
+      <recent name="C:\Users\brand\Documents\Projects\Student-Checkout\Public\assets" />
       <recent name="C:\Users\brand\Documents\Projects\Student-Checkout\Public\css" />
       <recent name="C:\Users\brand\Documents\Projects\Student-Checkout\Public\js" />
     </key>

@@ -6,9 +6,13 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/template/html"
+	"github.com/joho/godotenv"
+	"github.com/mileusna/crontab"
 	"log"
 	"strconv"
 )
+
+const Port = 8064
 
 func setupRoutes(app *fiber.App) {
 	app.Use(
@@ -35,16 +39,28 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/", routes.Home)
 	app.Post("/id/:name", routes.Id)
 	app.Get("/GetCSV", routes.GetCSV)
+	app.Get("/classroom.csv", routes.CSVFile)
 }
 
 func main() {
 	log.Println("[START] Starting student checkout server")
+
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("[ERROR] Error loading .env file")
+	}
+
+	ctab := crontab.New()
+
+	ctab.MustAddJob("5 15 * * 1-5", func() { // 03:05 PM every weekday
+		routes.DoDailyStuff()
+	})
 
 	engine := html.New("./Resources/Views", ".html")
 	router := fiber.New(fiber.Config{DisableStartupMessage: true, Views: engine})
 	setupRoutes(router)
 	log.Println("[START] Finished setting up routes")
 
-	log.Println("[START] Starting server on port", strconv.Itoa(8080))
-	log.Fatalln(router.Listen(":" + strconv.Itoa(8080)))
+	log.Println("[START] Starting server on port", strconv.Itoa(Port))
+	log.Fatalln(router.Listen(":" + strconv.Itoa(Port)))
 }

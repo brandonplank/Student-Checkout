@@ -21,7 +21,9 @@ scanner.addListener('scan', function (content) {
         title: 'Success',
         message: 'Read the QR code! You are free to go.'
     });
-    getTable()
+    setTimeout(function () {
+        getTable()
+    }, 500);
 });
 Instascan.Camera.getCameras().then(function (cameras) {
     if (cameras.length > 0) {
@@ -40,13 +42,17 @@ function sendTestContent(content) {
 }
 
 function arrayToTable(tableData) {
-    var table = $('<table></table>');
+    var table = $('<table class="table"></table>');
     $(tableData).each(function (i, rowData) {
         var row = $('<tr></tr>');
         $(rowData).each(function (j, cellData) {
-            row.append($('<td>'+cellData+'</td>'));
+            if(cellData.length >= 1) {
+                row.append($('<td>'+cellData+'</td>'));
+            }
         });
         table.append(row);
     });
     return table;
 }
+
+console.log("Hi reader :) This is Brandon here(Class of 2022) congrats on clicking F12 or view page src :P\n\nThis project was made using a multitude of languages, here is the list\n\nHTML(not really a programming language)\nJavaScript\nGoLang\n\nPlease always be nice to Mrs. Hart, she is the best teacher ever to exist.\nTalk to you on the flip side.")

@@ -1,18 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <title>Student Checkout</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Classroom Sign-out</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/Footer-Dark.css">
+    <link rel="stylesheet" href="assets/css/Navigation-Clean.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+    <link rel="stylesheet" href="assets/css/notifications.css">
+
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.3.3/adapter.min.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.js"></script>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.js"></script>
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.min.js"></script>
     <script type="text/javascript" src="https://rawgit.com/schmich/instascan-builds/master/instascan.min.js"></script>
-    <link rel="stylesheet" href="css/notifications.css">
-    <script src="js/notifications.js"></script>
+    <script type="text/javascript" src="assets/js/notifications.js"></script>
 </head>
+
 <body>
-<video id="preview" width="320" height="240"></video>
-<script type="text/javascript" src="js/classroom.js"></script>
-<table></table>
+<nav class="navbar navbar-light navbar-expand-lg navigation-clean">
+    <div class="container"><a class="navbar-brand" href="#" style="margin-left: 33px;"><img style="width: 31px;height: 40px;" src="assets/img/viking_logo.png">&nbsp; &nbsp;Classroom Sign-out</a>
+        <a href="/classroom.csv">Download CSV</a>
+    </div>
+</nav>
+<div style="margin-top: 50px;">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6">
+                <video id="preview" width="560" height="315"></video>
+            </div>
+            <div class="col-md-6">
+                <div class="table-responsive">
+                    <table class="table"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div></div>
+<div>
+    <footer class="footer-dark" style="height: 110.5px;">
+        <div class="container">
+            <p class="copyright" style="padding-top: 0px;"><strong>Brandon Plank © {{.year}}, Go Vikings!</strong></p>
+        </div>
+    </footer>
+</div>
+<script type="text/javascript" src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="assets/js/classroom.js"></script>
 </body>
 </html>
