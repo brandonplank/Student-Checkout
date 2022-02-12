@@ -17,8 +17,8 @@ import (
 const Port = 8064
 
 func Auth(name string, password string) bool {
-	envUsername := os.Getenv("HART_USERNAME")
-	envPassword := os.Getenv("HART_PASSWORD")
+	envUsername := os.Getenv("ADMIN_USERNAME")
+	envPassword := os.Getenv("ADMIN_PASSWORD")
 	if name == envUsername && password == envPassword {
 		return true
 	}
