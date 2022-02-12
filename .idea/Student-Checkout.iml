@@ -5,5 +5,10 @@
     <content url="file://$MODULE_DIR$" />
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="library" name="instascan" level="application" />
+    <orderEntry type="library" name="vue" level="application" />
+    <orderEntry type="library" name="PapaParse" level="application" />
+    <orderEntry type="library" name="webrtc-adapter" level="application" />
+    <orderEntry type="library" name="jquery" level="application" />
   </component>
 </module>

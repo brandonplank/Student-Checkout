@@ -1,42 +1,44 @@
 package routes
 
 import (
+	"brandonplank.org/checkout/models"
 	"encoding/base64"
-	"fmt"
+	"errors"
+	csv "github.com/gocarina/gocsv"
 	"github.com/gofiber/fiber/v2"
 	"log"
 	"os"
+	"reflect"
 	"time"
 )
-
-var people []string
-
-var path = "log.txt"
-
-func CreateLogFile() {
-	var _, err = os.Stat(path)
-	if os.IsNotExist(err) {
-		var file, err = os.Create(path)
-		if err != nil {
-			return
-		}
-		defer file.Close()
-	}
-
-	fmt.Println("File opened at", path)
-}
 
 func remove(slice []string, s int) []string {
 	return append(slice[:s], slice[s+1:]...)
 }
 
-func DoesPersonExist(name string) (bool, int) {
-	for index, object := range people {
-		if name == object {
-			return true, index
+func ReverseSlice(data interface{}) {
+	value := reflect.ValueOf(data)
+	if value.Kind() != reflect.Slice {
+		panic(errors.New("data must be a slice type"))
+	}
+	valueLen := value.Len()
+	for i := 0; i <= int((valueLen-1)/2); i++ {
+		reverseIndex := valueLen - 1 - i
+		tmp := value.Index(reverseIndex).Interface()
+		value.Index(reverseIndex).Set(value.Index(i))
+		value.Index(i).Set(reflect.ValueOf(tmp))
+	}
+}
+
+func IsStudentOut(name string, students []*models.Student) bool {
+	for _, stu := range students {
+		if stu.Name == name {
+			if stu.SignIn == "Signed Out" {
+				return true
+			}
 		}
 	}
-	return false, 0
+	return false
 }
 
 func Home(ctx *fiber.Ctx) error {
@@ -47,20 +49,71 @@ func Id(ctx *fiber.Ctx) error {
 	nameBase64 := ctx.Params("name")
 	nameData, err := base64.URLEncoding.DecodeString(nameBase64)
 	if err != nil {
-		return ctx.Next()
+		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
+
+	var students = []*models.Student{}
+
 	name := string(nameData)
-	log.Println(name, nameBase64)
 
-	does, index := DoesPersonExist(name)
-	var file, _ = os.OpenFile(path, os.O_RDWR, 0644)
-	defer file.Close()
-	if does {
-		file.WriteString(fmt.Sprintf("%s\nSigned In at %s\n", name, time.Now().String()))
-		people = remove(people, index)
-	} else {
-		file.WriteString(fmt.Sprintf("%s\nSigned Out at %s\n", name, time.Now().String()))
+	studentsFile, err := os.OpenFile("classroom.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+	defer studentsFile.Close()
+
+	if err := csv.UnmarshalFile(studentsFile, &students); err != nil {
+		log.Println("[CSV] No students")
 	}
 
-	return ctx.Next()
+	if err := studentsFile.Truncate(0); err != nil {
+		log.Println("[CSV] Unable to truncate start")
+	}
+
+	if _, err := studentsFile.Seek(0, 0); err != nil {
+		log.Println("[CSV] Unable to seek start")
+	}
+
+	if IsStudentOut(name, students) {
+		log.Println(name, "has returned")
+		var tempStudents []*models.Student
+		for _, stu := range students {
+			if stu.Name == name {
+				if stu.SignIn == "Signed Out" {
+					stu.SignIn = time.Now().Format("3:04 pm")
+				}
+			}
+			tempStudents = append(tempStudents, stu)
+		}
+		students = tempStudents
+	} else {
+		log.Println(name, "has left")
+		students = append(students, &models.Student{Name: name, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out"})
+	}
+
+	err = csv.MarshalFile(&students, studentsFile)
+	if err != nil {
+		panic(err)
+	}
+
+	return ctx.SendStatus(fiber.StatusOK)
+}
+
+func GetCSV(ctx *fiber.Ctx) error {
+	var students = []*models.Student{}
+	studentsFile, err := os.OpenFile("classroom.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+	defer studentsFile.Close()
+
+	if err := csv.UnmarshalFile(studentsFile, &students); err != nil {
+		return ctx.SendString("No students yet")
+	}
+
+	ReverseSlice(students)
+
+	content, _ := csv.MarshalBytes(students)
+
+	return ctx.Send(content)
 }

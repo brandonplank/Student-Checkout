@@ -34,18 +34,17 @@ func setupRoutes(app *fiber.App) {
 
 	app.Get("/", routes.Home)
 	app.Post("/id/:name", routes.Id)
+	app.Get("/GetCSV", routes.GetCSV)
 }
 
 func main() {
 	log.Println("[START] Starting student checkout server")
-
-	routes.CreateLogFile()
 
 	engine := html.New("./Resources/Views", ".html")
 	router := fiber.New(fiber.Config{DisableStartupMessage: true, Views: engine})
 	setupRoutes(router)
 	log.Println("[START] Finished setting up routes")
 
-	log.Println("[START] Starting server on port", strconv.Itoa(80))
-	log.Fatalln(router.Listen(":" + strconv.Itoa(80)))
+	log.Println("[START] Starting server on port", strconv.Itoa(8080))
+	log.Fatalln(router.Listen(":" + strconv.Itoa(8080)))
 }

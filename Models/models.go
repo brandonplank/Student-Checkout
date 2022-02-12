@@ -1,9 +1,7 @@
 package models
 
-import "time"
-
-type Classmate struct {
-	Name    string
-	SignOut time.Time
-	SignIn  time.Time
+type Student struct {
+	Name    string `csv:"Name"`
+	SignOut string `csv:"Signed Out"`
+	SignIn  string `csv:"Signed In"`
 }
