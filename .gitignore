@@ -18,4 +18,5 @@
 *.csv
 .idea
 *.key
-*.png
+
+bin/genqrcodes/codes
