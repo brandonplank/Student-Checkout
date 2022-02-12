@@ -1,2 +1,4 @@
+github.com/ledongthuc/pdf v0.0.0-20210621053716-e28cb8259002 h1:9KI9JpkbCm0b/xSjvNyg9O7G27t+cf+L3um6xv1IbNs=
+github.com/ledongthuc/pdf v0.0.0-20210621053716-e28cb8259002/go.mod h1:imJHygn/1yfhB7XSJJKlFZKl/J+dCPAknuiaGOshXAs=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e h1:MRM5ITcdelLK2j1vwZ3Je0FKVCfqOLp5zO6trqMLYs0=
 github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e/go.mod h1:XV66xRDqSt+GTGFMVlhk3ULuV0y9ZmzeVGR4mloJI3M=
