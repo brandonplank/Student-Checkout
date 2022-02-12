@@ -126,6 +126,33 @@ func CSVFile(ctx *fiber.Ctx) error {
 	return ctx.SendFile(csvFileName, false)
 }
 
+func IsOut(ctx *fiber.Ctx) error {
+	nameBase64 := ctx.Params("name")
+	nameData, err := base64.URLEncoding.DecodeString(nameBase64)
+	if err != nil {
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
+	name := string(nameData)
+
+	var students = []*models.Student{}
+	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+	defer studentsFile.Close()
+
+	if err := csv.UnmarshalFile(studentsFile, &students); err != nil {
+		return ctx.SendStatus(fiber.StatusInternalServerError)
+	}
+
+	type out struct {
+		IsOut bool   `json:"isOut"`
+		Name  string `json:"name"`
+	}
+
+	return ctx.JSON(out{IsOut: IsStudentOut(name, students), Name: name})
+}
+
 func DoDailyStuff() {
 
 	pass := os.Getenv("PASSWORD")
@@ -133,7 +160,6 @@ func DoDailyStuff() {
 	e := email.NewEmail()
 	e.From = "Brandon Plank <planksprojects@gmail.com>"
 	e.To = []string{"susie.hart@rowan.kyschools.us", "brandon@brandonplank.org"}
-	// e.To = []string{"brandon@brandonplank.org"}
 	e.Subject = "Classroom Sign-Outs"
 	e.Text = []byte("This is an automated email")
 	e.AttachFile(csvFileName)

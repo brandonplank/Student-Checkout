@@ -54,6 +54,7 @@ func setupRoutes(app *fiber.App) {
 
 	app.Get("/", routes.Home)
 	app.Post("/id/:name", routes.Id)
+	app.Post("/isOut/:name", routes.IsOut)
 	app.Get("/GetCSV", routes.GetCSV)
 	app.Get("/classroom.csv", routes.CSVFile)
 }
