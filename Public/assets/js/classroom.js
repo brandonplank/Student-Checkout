@@ -1,4 +1,7 @@
 const successNotification = window.createNotification({});
+const errorNotification = window.createNotification({
+    theme: 'error'
+});
 
 // CSV Table fetcher
 function getTable() {
@@ -66,11 +69,25 @@ function sendStatusToWebPage() {
     request.send();
 }
 
-var lastResult
+function verifyName(name) {
+    var exp = /^([a-zA-Z\-]+)\s*,\s*([a-zA-Z]+)(\s+([a-zA-Z]+))?$/gm;
+    return name.match(exp);
+}
 
+var lastResult
 function onScanSuccess(decodedText, decodedResult) {
     if (decodedText !== lastResult) {
         lastResult = decodedText
+        setTimeout(function () {
+            lastResult = null
+        }, 10*1000);
+        if(!verifyName(decodedText)) {
+            errorNotification({
+                title: 'Error',
+                message: 'The QR you scanned is not valid',
+            });
+            return
+        }
         console.log(decodedText);
         var request = new XMLHttpRequest()
         request.timeout = 5000;
@@ -81,10 +98,6 @@ function onScanSuccess(decodedText, decodedResult) {
         setTimeout(function () {
             getTable()
         }, 500);
-
-        setTimeout(function () {
-            lastResult = null
-        }, 10*1000);
     }
 }
 
