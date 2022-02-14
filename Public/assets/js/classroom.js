@@ -24,6 +24,9 @@ function sendTestContent(content) {
 function cleanCSV() {
     var request = new XMLHttpRequest();
     console.log("Cleaning CSV")
+    request.addEventListener("load", function () {
+        getTable()
+    });
     request.open("GET", "/CleanCSV", true);
     request.send();
 }
