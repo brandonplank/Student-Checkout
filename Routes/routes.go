@@ -35,6 +35,9 @@ func ReverseSlice(data interface{}) {
 }
 
 func IsStudentOut(name string, students []*models.Student) bool {
+	if students == nil {
+		return false
+	}
 	for _, stu := range students {
 		if stu.Name == name {
 			if stu.SignIn == "Signed Out" {
@@ -141,9 +144,7 @@ func IsOut(ctx *fiber.Ctx) error {
 	}
 	defer studentsFile.Close()
 
-	if err := csv.UnmarshalFile(studentsFile, &students); err != nil {
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
+	_ = csv.UnmarshalFile(studentsFile, &students)
 
 	type out struct {
 		IsOut bool   `json:"isOut"`

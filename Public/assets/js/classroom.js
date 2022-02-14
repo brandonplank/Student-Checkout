@@ -56,28 +56,31 @@ function sendStatusToWebPage() {
     request.send();
 }
 
-let scanner = new Instascan.Scanner({ video: document.getElementById('preview') });
-scanner.addListener('scan', function (content) {
-    console.log(content);
+var lastResult
 
-    var request = new XMLHttpRequest()
-    request.timeout = 5000;
-    request.addEventListener("load", sendStatusToWebPage);
-    request.open("POST", "/isOut/" + btoa(content));
-    request.send();
+function onScanSuccess(decodedText, decodedResult) {
+    if (decodedText !== lastResult) {
+        lastResult = decodedText
+        console.log(decodedText);
+        var request = new XMLHttpRequest()
+        request.timeout = 5000;
+        request.addEventListener("load", sendStatusToWebPage);
+        request.open("POST", "/isOut/" + btoa(decodedText));
+        request.send();
 
-    setTimeout(function () {
-        getTable()
-    }, 500);
-});
-Instascan.Camera.getCameras().then(function (cameras) {
-    if (cameras.length > 0) {
-        scanner.start(cameras[0]);
-    } else {
-        console.error('No cameras found.');
+        setTimeout(function () {
+            getTable()
+        }, 500);
+
+        setTimeout(function () {
+            lastResult = null
+        }, 10*1000);
     }
-}).catch(function (e) {
-    console.error(e);
-});
-0
+}
+
+const html5QrCode = new Html5Qrcode(
+    "qr-reader", { formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] });
+const config = { fps: 60, qrbox: 250 };
+html5QrCode.start({ facingMode: "user" }, config, onScanSuccess);
+
 console.log("Hi reader :) This is Brandon here(Class of 2022) congrats on clicking F12 or view page src :P\n\nThis project was made using a multitude of languages, here is the list\n\nHTML(not really a programming language)\nJavaScript\nGoLang\n\nPlease always be nice to Mrs. Hart, she is the best teacher ever to exist.\nTalk to you on the flip side.")
