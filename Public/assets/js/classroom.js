@@ -78,6 +78,14 @@ function onScanSuccess(decodedText, decodedResult) {
     }
 }
 
+Html5Qrcode.getCameras().then(devices => {
+    if (devices && devices.length) {
+        var cameraId = devices[0].id;
+    }
+}).catch(err => {
+    console.error(err)
+});
+
 const html5QrCode = new Html5Qrcode(
     "qr-reader", { formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] });
 const config = { fps: 60, qrbox: 250 };
