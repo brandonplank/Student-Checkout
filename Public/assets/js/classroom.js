@@ -81,6 +81,7 @@ function onScanSuccess(decodedText, decodedResult) {
 Html5Qrcode.getCameras().then(devices => {
     if (devices && devices.length) {
         var cameraId = devices[0].id;
+        console.log(`Got camera ID ${cameraId}`)
     }
 }).catch(err => {
     console.error(err)
