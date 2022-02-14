@@ -7,6 +7,7 @@ import (
 	csv "github.com/gocarina/gocsv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jordan-wright/email"
+	"io/ioutil"
 	"log"
 	"net/smtp"
 	"os"
@@ -158,13 +159,21 @@ func DoDailyStuff() {
 
 	pass := os.Getenv("PASSWORD")
 
+	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	defer studentsFile.Close()
+
+	content, _ := ioutil.ReadFile(csvFileName)
+	if len(content) <= 1 {
+		return
+	}
+
 	e := email.NewEmail()
 	e.From = "Brandon Plank <planksprojects@gmail.com>"
 	e.To = []string{"susie.hart@rowan.kyschools.us", "brandon@brandonplank.org"}
 	e.Subject = "Classroom Sign-Outs"
 	e.Text = []byte("This is an automated email")
 	e.AttachFile(csvFileName)
-	err := e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+	err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
 	if err != nil {
 		log.Println(err)
 	}
@@ -173,6 +182,4 @@ func DoDailyStuff() {
 	if err != nil {
 		log.Println("ono")
 	}
-	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
-	defer studentsFile.Close()
 }
