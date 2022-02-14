@@ -21,6 +21,13 @@ function sendTestContent(content) {
     request.send();
 }
 
+function cleanCSV() {
+    var request = new XMLHttpRequest();
+    console.log("Cleaning CSV")
+    request.open("GET", "/CleanCSV", true);
+    request.send();
+}
+
 function arrayToTable(tableData) {
     var table = $('<table class="table"></table>');
     $(tableData).each(function (i, rowData) {

@@ -155,6 +155,14 @@ func IsOut(ctx *fiber.Ctx) error {
 	return ctx.JSON(out{IsOut: IsStudentOut(name, students), Name: name})
 }
 
+func CleanCSV(ctx *fiber.Ctx) error {
+	err := os.Remove(csvFileName)
+	if err != nil {
+		return err
+	}
+	return ctx.SendStatus(fiber.StatusOK)
+}
+
 func DoDailyStuff() {
 
 	pass := os.Getenv("PASSWORD")
