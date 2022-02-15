@@ -96,7 +96,7 @@ func Id(ctx *fiber.Ctx) error {
 		students = tempStudents
 	} else {
 		log.Println(name, "has left")
-		students = append(students, &models.Student{Name: name, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out"})
+		students = append(students, &models.Student{Name: name, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006")})
 	}
 
 	err = csv.MarshalFile(&students, studentsFile)
