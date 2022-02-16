@@ -4,23 +4,25 @@ import (
 	"brandonplank.org/checkout/models"
 	"bytes"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	csv "github.com/gocarina/gocsv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jordan-wright/email"
-	"io/ioutil"
 	"log"
 	"net/smtp"
 	"os"
 	"reflect"
+	"sync"
 	"time"
 )
 
-const DatabaseFile = "Storage/database.json"
+var MainGlobal = new(models.Main)
 
+const DatabaseFile = "Storage/database.json"
 const csvFileName = "classroom.csv"
+
+var mutex sync.Mutex
 
 func ReverseSlice(data interface{}) {
 	value := reflect.ValueOf(data)
@@ -36,7 +38,7 @@ func ReverseSlice(data interface{}) {
 	}
 }
 
-func IsStudentOut(name string, students []*models.Student) bool {
+func IsStudentOut(name string, students []models.Student) bool {
 	if students == nil {
 		return false
 	}
@@ -55,80 +57,75 @@ func Home(ctx *fiber.Ctx) error {
 }
 
 func Id(ctx *fiber.Ctx) error {
+	name := ctx.Locals("name")
+
 	nameBase64 := ctx.Params("name")
 	nameData, err := base64.URLEncoding.DecodeString(nameBase64)
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
 
-	var students = []*models.Student{}
+	studentName := string(nameData)
 
-	name := string(nameData)
-
-	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return ctx.SendStatus(fiber.StatusInternalServerError)
-	}
-	defer studentsFile.Close()
-
-	if err := csv.UnmarshalFile(studentsFile, &students); err != nil {
-		log.Println("[CSV] No students")
-	}
-
-	if err := studentsFile.Truncate(0); err != nil {
-		log.Println("[CSV] Unable to truncate start")
-	}
-
-	if _, err := studentsFile.Seek(0, 0); err != nil {
-		log.Println("[CSV] Unable to seek start")
-	}
-
-	if IsStudentOut(name, students) {
-		log.Println(name, "has returned")
-		var tempStudents []*models.Student
-		for _, stu := range students {
-			if stu.Name == name {
-				if stu.SignIn == "Signed Out" {
-					stu.SignIn = time.Now().Format("3:04 pm")
+	for _, school := range MainGlobal.Schools {
+		for _, classroom := range school.Classrooms {
+			if classroom.Name == name {
+				if IsStudentOut(studentName, classroom.Students) {
+					log.Println(studentName, "has returned")
+					var tempStudents []models.Student
+					for _, stu := range classroom.Students {
+						if stu.Name == studentName {
+							if stu.SignIn == "Signed Out" {
+								stu.SignIn = time.Now().Format("3:04 pm")
+							}
+						}
+						tempStudents = append(tempStudents, stu)
+					}
+					mutex.Lock()
+					classroom.Students = tempStudents
+					mutex.Unlock()
+				} else {
+					log.Println(studentName, "has left")
+					mutex.Lock()
+					classroom.Students = append(classroom.Students, models.Student{Name: studentName, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006")})
+					mutex.Unlock()
 				}
+				return ctx.SendStatus(fiber.StatusOK)
 			}
-			tempStudents = append(tempStudents, stu)
 		}
-		students = tempStudents
-	} else {
-		log.Println(name, "has left")
-		students = append(students, &models.Student{Name: name, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006")})
 	}
-
-	err = csv.MarshalFile(&students, studentsFile)
-	if err != nil {
-		panic(err)
-	}
-
-	return ctx.SendStatus(fiber.StatusOK)
+	return ctx.SendStatus(fiber.StatusBadRequest)
 }
 
 func GetCSV(ctx *fiber.Ctx) error {
-	var students = []*models.Student{}
-	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+	log.Println(MainGlobal)
+	name := ctx.Locals("name")
+	for _, school := range MainGlobal.Schools {
+		for _, classroom := range school.Classrooms {
+			if classroom.Name == name {
+				ReverseSlice(classroom.Students)
+				content, _ := csv.MarshalBytes(classroom.Students)
+				return ctx.Send(content)
+			}
+		}
 	}
-	defer studentsFile.Close()
-
-	if err := csv.UnmarshalFile(studentsFile, &students); err != nil {
-		return ctx.SendString("No students yet")
-	}
-
-	ReverseSlice(students)
-
-	content, _ := csv.MarshalBytes(students)
-
-	return ctx.Send(content)
+	return ctx.SendString("No students yet")
 }
 
 func CSVFile(ctx *fiber.Ctx) error {
-	return ctx.SendFile(csvFileName, false)
+	name := ctx.Locals("name")
+	for _, school := range MainGlobal.Schools {
+		for _, classroom := range school.Classrooms {
+			if classroom.Name == name {
+				students, err := csv.MarshalBytes(classroom.Students)
+				if err != nil {
+					return ctx.SendStatus(fiber.StatusBadRequest)
+				}
+				return ctx.Send(students)
+			}
+		}
+	}
+	return ctx.SendStatus(fiber.StatusBadRequest)
 }
 
 func IsOut(ctx *fiber.Ctx) error {
@@ -137,23 +134,21 @@ func IsOut(ctx *fiber.Ctx) error {
 	if err != nil {
 		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
-	name := string(nameData)
+	studentName := string(nameData)
 
-	var students = []*models.Student{}
-	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		return ctx.SendStatus(fiber.StatusInternalServerError)
+	name := ctx.Locals("name")
+	for _, school := range MainGlobal.Schools {
+		for _, classroom := range school.Classrooms {
+			if classroom.Name == name {
+				type out struct {
+					IsOut bool   `json:"isOut"`
+					Name  string `json:"name"`
+				}
+				return ctx.JSON(out{IsOut: IsStudentOut(studentName, classroom.Students), Name: studentName})
+			}
+		}
 	}
-	defer studentsFile.Close()
-
-	_ = csv.UnmarshalFile(studentsFile, &students)
-
-	type out struct {
-		IsOut bool   `json:"isOut"`
-		Name  string `json:"name"`
-	}
-
-	return ctx.JSON(out{IsOut: IsStudentOut(name, students), Name: name})
+	return ctx.SendStatus(fiber.StatusBadRequest)
 }
 
 func CleanJSON(ctx *fiber.Ctx) error {
@@ -171,16 +166,7 @@ func DailyRoutine() {
 	studentsFile, err := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	defer studentsFile.Close()
 
-	var main models.Main
-
-	content, _ := ioutil.ReadFile(DatabaseFile)
-	if len(content) <= 1 {
-		return
-	}
-
-	json.Unmarshal(content, &main)
-
-	for _, school := range main.Schools {
+	for _, school := range MainGlobal.Schools {
 		for _, class := range school.Classrooms {
 			students := class.Students
 

@@ -3,10 +3,11 @@ module brandonplank.org/checkout
 go 1.17
 
 require (
-	github.com/gofiber/fiber/v2 v2.26.0
-	github.com/gofiber/template v1.6.22
+	github.com/gofiber/fiber/v2 v2.27.0
+	github.com/gofiber/template v1.6.23
 	github.com/joho/godotenv v1.4.0
 	github.com/mileusna/crontab v1.2.0
+	golang.org/x/crypto v0.0.0-20220214200702-86341886e292
 )
 
 require (

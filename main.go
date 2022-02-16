@@ -9,18 +9,24 @@ import (
 	"github.com/gofiber/template/html"
 	"github.com/joho/godotenv"
 	"github.com/mileusna/crontab"
+	"golang.org/x/crypto/bcrypt"
 	"log"
-	"os"
 	"strconv"
 )
 
 const Port = 8064
 
 func Auth(name string, password string) bool {
-	envUsername := os.Getenv("ADMIN_USERNAME")
-	envPassword := os.Getenv("ADMIN_PASSWORD")
-	if name == envUsername && password == envPassword {
-		return true
+	for _, school := range routes.MainGlobal.Schools {
+		for _, classroom := range school.Classrooms {
+			if classroom.Name == name {
+				err := bcrypt.CompareHashAndPassword([]byte(classroom.Password), []byte(password))
+				if err != nil {
+					return false
+				}
+				return true
+			}
+		}
 	}
 	return false
 }
@@ -56,7 +62,7 @@ func setupRoutes(app *fiber.App) {
 	app.Post("/id/:name", routes.Id)
 	app.Post("/isOut/:name", routes.IsOut)
 	app.Get("/GetCSV", routes.GetCSV)
-	app.Get("/CleanCSV", routes.CleanCSV)
+	app.Get("/CleanCSV", routes.CleanJSON)
 	app.Get("/classroom.csv", routes.CSVFile)
 }
 
