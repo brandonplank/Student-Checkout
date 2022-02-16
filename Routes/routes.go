@@ -2,8 +2,11 @@ package routes
 
 import (
 	"brandonplank.org/checkout/models"
+	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
+	"fmt"
 	csv "github.com/gocarina/gocsv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jordan-wright/email"
@@ -15,11 +18,9 @@ import (
 	"time"
 )
 
-const csvFileName = "classroom.csv"
+const DatabaseFile = "Storage/database.json"
 
-func remove(slice []string, s int) []string {
-	return append(slice[:s], slice[s+1:]...)
-}
+const csvFileName = "classroom.csv"
 
 func ReverseSlice(data interface{}) {
 	value := reflect.ValueOf(data)
@@ -96,7 +97,7 @@ func Id(ctx *fiber.Ctx) error {
 		students = tempStudents
 	} else {
 		log.Println(name, "has left")
-		students = append(students, &models.Student{Name: name, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out"})
+		students = append(students, &models.Student{Name: name, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006")})
 	}
 
 	err = csv.MarshalFile(&students, studentsFile)
@@ -155,35 +156,51 @@ func IsOut(ctx *fiber.Ctx) error {
 	return ctx.JSON(out{IsOut: IsStudentOut(name, students), Name: name})
 }
 
-func CleanCSV(ctx *fiber.Ctx) error {
-	err := os.Remove(csvFileName)
+func CleanJSON(ctx *fiber.Ctx) error {
+	err := os.Remove(DatabaseFile)
 	if err != nil {
 		return err
 	}
 	return ctx.SendStatus(fiber.StatusOK)
 }
 
-func DoDailyStuff() {
+func DailyRoutine() {
 
 	pass := os.Getenv("PASSWORD")
 
-	studentsFile, err := os.OpenFile(csvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	studentsFile, err := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	defer studentsFile.Close()
 
-	content, _ := ioutil.ReadFile(csvFileName)
+	var main models.Main
+
+	content, _ := ioutil.ReadFile(DatabaseFile)
 	if len(content) <= 1 {
 		return
 	}
 
-	e := email.NewEmail()
-	e.From = "Brandon Plank <planksprojects@gmail.com>"
-	e.To = []string{"susie.hart@rowan.kyschools.us", "brandon@brandonplank.org"}
-	e.Subject = "Classroom Sign-Outs"
-	e.Text = []byte("This is an automated email")
-	e.AttachFile(csvFileName)
-	err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
-	if err != nil {
-		log.Println(err)
+	json.Unmarshal(content, &main)
+
+	for _, school := range main.Schools {
+		for _, class := range school.Classrooms {
+			students := class.Students
+
+			csvClass, err := csv.MarshalBytes(students)
+			if err != nil {
+				log.Println(err)
+			}
+			csvReader := bytes.NewReader(csvClass)
+
+			e := email.NewEmail()
+			e.From = "Brandon Plank <planksprojects@gmail.com>"
+			e.To = []string{class.Email}
+			e.Subject = "Classroom Sign-Outs"
+			e.Text = []byte("This is an automated email to " + class.Name)
+			e.Attach(csvReader, fmt.Sprintf("%s.csv", class.Name), "text/csv")
+			err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+			if err != nil {
+				log.Println(err)
+			}
+		}
 	}
 
 	err = os.Remove(csvFileName)

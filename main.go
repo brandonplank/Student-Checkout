@@ -71,7 +71,7 @@ func main() {
 	ctab := crontab.New()
 
 	ctab.MustAddJob("5 15 * * 1-5", func() { // 03:05 PM every weekday
-		routes.DoDailyStuff()
+		routes.DailyRoutine()
 	})
 
 	engine := html.New("./Resources/Views", ".html")
