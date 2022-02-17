@@ -8,15 +8,16 @@ type Main struct {
 }
 
 type School struct {
-	AdminName     string      `csv:"Name" json:"adminName"`
-	AdminPassword string      `csv:"Password" json:"adminPassword"`
+	Name          string      `csv:"Name" json:"name"`
+	AdminName     string      `csv:"Admin Name" json:"adminName"`
+	AdminPassword string      `csv:"Admin Password" json:"adminPassword"`
 	AdminEmail    string      `csv:"Email" json:"email"`
 	Classrooms    []Classroom `csv:"Classrooms" json:"classrooms"`
 }
 
 type Classroom struct {
 	Name     string    `csv:"Name" json:"name"`
-	Password string    `csv:"Password" json:"password"`
+	Password []byte    `csv:"Password" json:"password"`
 	Email    string    `csv:"Email" json:"email"`
 	Students []Student `csv:"Students" json:"students"`
 }

@@ -19,4 +19,6 @@
 .idea
 *.key
 
+*.json
+
 bin/genqrcodes/codes

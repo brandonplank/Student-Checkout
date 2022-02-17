@@ -20,17 +20,21 @@ getTable()
 function sendTestContent(content) {
     var request = new XMLHttpRequest();
     console.log("Going to send", content)
+    request.addEventListener("load", function () {
+        console.log(request.status)
+        getTable()
+    })
     request.open("POST", "/id/" + btoa(content), true)
     request.send()
 }
 
-function cleanCSV() {
+function cleanDatabase() {
     var request = new XMLHttpRequest();
-    console.log("Cleaning CSV")
+    console.log("Cleaning database")
     request.addEventListener("load", function () {
         getTable()
     })
-    request.open("GET", "/CleanCSV", true)
+    request.open("GET", "/CleanJSON", true)
     request.send()
 }
 
@@ -65,6 +69,9 @@ function sendStatusToWebPage() {
     }
 
     let request = new XMLHttpRequest()
+    request.addEventListener("load", function () {
+        getTable()
+    })
     request.open("POST", "/id/" + btoa(parsedJson.name))
     request.send()
 }
@@ -102,15 +109,15 @@ function onScanSuccess(decodedText) {
             }
             return
         }
+        successNotification({
+            title: 'Success',
+            message: 'Successfully read the QR code'
+        })
         var request = new XMLHttpRequest()
         request.timeout = 5000
         request.addEventListener("load", sendStatusToWebPage)
         request.open("POST", "/isOut/" + btoa(decodedText))
         request.send()
-
-        setTimeout(function () {
-            getTable()
-        }, 500)
     }
 }
 

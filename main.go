@@ -11,20 +11,25 @@ import (
 	"github.com/mileusna/crontab"
 	"golang.org/x/crypto/bcrypt"
 	"log"
+	"os"
 	"strconv"
 )
 
 const Port = 8064
 
 func Auth(name string, password string) bool {
-	for _, school := range routes.MainGlobal.Schools {
-		for _, classroom := range school.Classrooms {
-			if classroom.Name == name {
-				err := bcrypt.CompareHashAndPassword([]byte(classroom.Password), []byte(password))
-				if err != nil {
-					return false
+	if name == routes.MainGlobal.AdminName && password == routes.MainGlobal.AdminPassword {
+		return true
+	} else {
+		for _, school := range routes.MainGlobal.Schools {
+			for _, classroom := range school.Classrooms {
+				if classroom.Name == name {
+					err := bcrypt.CompareHashAndPassword([]byte(classroom.Password), []byte(password))
+					if err != nil {
+						return false
+					}
+					return true
 				}
-				return true
 			}
 		}
 	}
@@ -62,7 +67,7 @@ func setupRoutes(app *fiber.App) {
 	app.Post("/id/:name", routes.Id)
 	app.Post("/isOut/:name", routes.IsOut)
 	app.Get("/GetCSV", routes.GetCSV)
-	app.Get("/CleanCSV", routes.CleanJSON)
+	app.Get("/CleanJSON", routes.CleanJSON)
 	app.Get("/classroom.csv", routes.CSVFile)
 }
 
@@ -73,6 +78,14 @@ func main() {
 	if err != nil {
 		log.Fatal("[ERROR] Error loading .env file")
 	}
+
+	database, err := os.OpenFile(routes.DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer database.Close()
+
+	routes.ReadJSONToStruct()
 
 	ctab := crontab.New()
 

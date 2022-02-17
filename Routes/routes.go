@@ -4,15 +4,18 @@ import (
 	"brandonplank.org/checkout/models"
 	"bytes"
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 	csv "github.com/gocarina/gocsv"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jordan-wright/email"
+	"io/ioutil"
 	"log"
 	"net/smtp"
 	"os"
 	"reflect"
+	"sort"
 	"sync"
 	"time"
 )
@@ -24,12 +27,46 @@ const csvFileName = "classroom.csv"
 
 var mutex sync.Mutex
 
+func WriteJSONToFile() {
+	database, err := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer database.Close()
+
+	data, err := json.MarshalIndent(MainGlobal, "", "\t")
+
+	err = ioutil.WriteFile(DatabaseFile, data, os.ModePerm)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func ReadJSONToStruct() {
+	content, _ := ioutil.ReadFile(DatabaseFile)
+	if len(content) <= 1 {
+		mainModel, _ := json.Marshal(models.Main{})
+		err := ioutil.WriteFile(DatabaseFile, mainModel, os.ModePerm)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	} else {
+		err := json.Unmarshal(content, &MainGlobal)
+		if err != nil {
+			log.Fatalln(err)
+		}
+	}
+}
+
 func ReverseSlice(data interface{}) {
 	value := reflect.ValueOf(data)
 	if value.Kind() != reflect.Slice {
 		panic(errors.New("data must be a slice type"))
 	}
 	valueLen := value.Len()
+	if valueLen < 1 {
+		return
+	}
 	for i := 0; i <= (valueLen-1)/2; i++ {
 		reverseIndex := valueLen - 1 - i
 		tmp := value.Index(reverseIndex).Interface()
@@ -67,8 +104,8 @@ func Id(ctx *fiber.Ctx) error {
 
 	studentName := string(nameData)
 
-	for _, school := range MainGlobal.Schools {
-		for _, classroom := range school.Classrooms {
+	for schoolIndex, school := range MainGlobal.Schools {
+		for classroomIndex, classroom := range school.Classrooms {
 			if classroom.Name == name {
 				if IsStudentOut(studentName, classroom.Students) {
 					log.Println(studentName, "has returned")
@@ -82,14 +119,15 @@ func Id(ctx *fiber.Ctx) error {
 						tempStudents = append(tempStudents, stu)
 					}
 					mutex.Lock()
-					classroom.Students = tempStudents
+					MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Students = tempStudents
 					mutex.Unlock()
 				} else {
 					log.Println(studentName, "has left")
 					mutex.Lock()
-					classroom.Students = append(classroom.Students, models.Student{Name: studentName, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006")})
+					MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Students = append(classroom.Students, models.Student{Name: studentName, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006")})
 					mutex.Unlock()
 				}
+				WriteJSONToFile()
 				return ctx.SendStatus(fiber.StatusOK)
 			}
 		}
@@ -98,18 +136,27 @@ func Id(ctx *fiber.Ctx) error {
 }
 
 func GetCSV(ctx *fiber.Ctx) error {
-	log.Println(MainGlobal)
 	name := ctx.Locals("name")
 	for _, school := range MainGlobal.Schools {
-		for _, classroom := range school.Classrooms {
-			if classroom.Name == name {
-				ReverseSlice(classroom.Students)
-				content, _ := csv.MarshalBytes(classroom.Students)
-				return ctx.Send(content)
+		if len(school.Classrooms) > 0 {
+			for _, classroom := range school.Classrooms {
+				if classroom.Name == name {
+					if len(classroom.Students) < 1 {
+						return ctx.SendString("No students yet")
+					}
+					sort.Slice(classroom.Students, func(i, j int) bool {
+						time1, _ := time.Parse("01/02/2006", classroom.Students[i].SignOut)
+						time2, _ := time.Parse("01/02/2006", classroom.Students[j].SignOut)
+						return time1.Before(time2)
+					})
+					ReverseSlice(classroom.Students)
+					content, _ := csv.MarshalBytes(classroom.Students)
+					return ctx.Send(content)
+				}
 			}
 		}
 	}
-	return ctx.SendString("No students yet")
+	return ctx.SendStatus(fiber.StatusInternalServerError)
 }
 
 func CSVFile(ctx *fiber.Ctx) error {
@@ -117,10 +164,17 @@ func CSVFile(ctx *fiber.Ctx) error {
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
 			if classroom.Name == name {
+				sort.Slice(classroom.Students, func(i, j int) bool {
+					time1, _ := time.Parse("01/02/2006", classroom.Students[i].SignOut)
+					time2, _ := time.Parse("01/02/2006", classroom.Students[j].SignOut)
+					return time1.Before(time2)
+				})
 				students, err := csv.MarshalBytes(classroom.Students)
 				if err != nil {
 					return ctx.SendStatus(fiber.StatusBadRequest)
 				}
+				ctx.Append("Content-Disposition", "attachment; filename=\"classroom.csv\"")
+				ctx.Append("Content-Type", "text/csv")
 				return ctx.Send(students)
 			}
 		}
@@ -174,8 +228,10 @@ func DailyRoutine() {
 			if err != nil {
 				log.Println(err)
 			}
+			if len(csvClass) < 5 {
+				continue
+			}
 			csvReader := bytes.NewReader(csvClass)
-
 			e := email.NewEmail()
 			e.From = "Brandon Plank <planksprojects@gmail.com>"
 			e.To = []string{class.Email}
