@@ -144,11 +144,9 @@ func GetCSV(ctx *fiber.Ctx) error {
 					if len(classroom.Students) < 1 {
 						return ctx.SendString("No students yet")
 					}
-					sort.Slice(classroom.Students, func(i, j int) bool {
-						time1, _ := time.Parse("01/02/2006", classroom.Students[i].SignOut)
-						time2, _ := time.Parse("01/02/2006", classroom.Students[j].SignOut)
-						return time1.Before(time2)
-					})
+					var students models.Students
+					students = classroom.Students
+					sort.Sort(students)
 					ReverseSlice(classroom.Students)
 					content, _ := csv.MarshalBytes(classroom.Students)
 					return ctx.Send(content)
@@ -164,18 +162,16 @@ func CSVFile(ctx *fiber.Ctx) error {
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
 			if classroom.Name == name {
-				sort.Slice(classroom.Students, func(i, j int) bool {
-					time1, _ := time.Parse("01/02/2006", classroom.Students[i].SignOut)
-					time2, _ := time.Parse("01/02/2006", classroom.Students[j].SignOut)
-					return time1.Before(time2)
-				})
-				students, err := csv.MarshalBytes(classroom.Students)
+				var students models.Students
+				students = classroom.Students
+				sort.Sort(students)
+				studentsBytes, err := csv.MarshalBytes(students)
 				if err != nil {
 					return ctx.SendStatus(fiber.StatusBadRequest)
 				}
 				ctx.Append("Content-Disposition", "attachment; filename=\"classroom.csv\"")
 				ctx.Append("Content-Type", "text/csv")
-				return ctx.Send(students)
+				return ctx.Send(studentsBytes)
 			}
 		}
 	}
