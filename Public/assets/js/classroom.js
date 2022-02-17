@@ -30,11 +30,14 @@ function sendTestContent(content) {
 
 function cleanClass(name) {
     var request = new XMLHttpRequest();
-    console.log("Cleaning " + name ?? "current")
+    if(typeof name == 'undefined') {
+        name = ""
+    }
+    console.log("Cleaning " + name)
     request.addEventListener("load", function () {
         getTable()
     })
-    request.open("GET", "/CleanJSON/" + name ?? "", true)
+    request.open("GET", "/CleanClass/", true)
     request.send()
 }
 
