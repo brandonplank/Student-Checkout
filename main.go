@@ -2,6 +2,7 @@ package main
 
 import (
 	"brandonplank.org/checkout/routes"
+	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -18,9 +19,43 @@ import (
 )
 
 const Port = 8064
+const Key = "classof2022"
+
+var context *fiber.Ctx
 
 func Auth(name string, password string) bool {
-	// TODO: Support JWT Aut
+	cookie := context.Cookies("token")
+
+	if len(cookie) > 5 {
+		token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+			return []byte(Key), nil
+		})
+		if err != nil {
+			context.Status(fiber.StatusUnauthorized)
+		}
+		claims := token.Claims.(*jwt.StandardClaims)
+		if claims.Issuer == name {
+			return true
+		}
+	} else {
+		claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+			Issuer:    name,
+			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), //1 day
+		})
+
+		token, err := claims.SignedString([]byte(Key))
+		if err != nil {
+			log.Println(err)
+		}
+
+		context.Cookie(&fiber.Cookie{
+			Name:     "token",
+			Value:    token,
+			Expires:  time.Now().Add(24 * time.Hour),
+			HTTPOnly: true,
+		})
+	}
+
 	if name == routes.MainGlobal.AdminName && password == routes.MainGlobal.AdminPassword {
 		return true
 	} else {
@@ -42,7 +77,8 @@ func Auth(name string, password string) bool {
 func setupRoutes(app *fiber.App) {
 	app.Use(
 		cors.New(cors.Config{
-			AllowHeaders: "Origin, Content-Type, Accept, Access-Control-Allow-Origin",
+			AllowHeaders:     "Origin, Content-Type, Accept, Access-Control-Allow-Origin",
+			AllowCredentials: true,
 		}),
 		logger.New(logger.Config{
 			Format:     "${time} [${method}]->${status} Latency->${latency} - ${path} | ${error}\n",
@@ -55,12 +91,7 @@ func setupRoutes(app *fiber.App) {
 			ctx.Append("Access-Control-Allow-Origin", "*")
 			ctx.Append("Developer", "Brandon Plank")
 			ctx.Append("License", "BSD 3-Clause License")
-			ctx.Cookie(&fiber.Cookie{
-				Name:     "token",
-				Value:    "",
-				Expires:  time.Now().Add(24 * time.Hour),
-				HTTPOnly: true,
-			})
+			context = ctx
 			return ctx.Next()
 		},
 		basicauth.New(basicauth.Config{

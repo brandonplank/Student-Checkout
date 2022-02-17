@@ -3,6 +3,7 @@ module brandonplank.org/checkout
 go 1.17
 
 require (
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gofiber/fiber/v2 v2.27.0
 	github.com/gofiber/template v1.6.23
 	github.com/joho/godotenv v1.4.0
