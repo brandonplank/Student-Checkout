@@ -21,7 +21,6 @@ const Port = 8064
 
 func Auth(name string, password string) bool {
 	// TODO: Support JWT Aut
-
 	if name == routes.MainGlobal.AdminName && password == routes.MainGlobal.AdminPassword {
 		return true
 	} else {
