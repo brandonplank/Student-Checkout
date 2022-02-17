@@ -30,11 +30,11 @@ function sendTestContent(content) {
 
 function cleanClass(name) {
     var request = new XMLHttpRequest();
-    console.log("Cleaning " + name)
+    console.log("Cleaning " + name ?? "current")
     request.addEventListener("load", function () {
         getTable()
     })
-    request.open("GET", "/CleanJSON/" + name, true)
+    request.open("GET", "/CleanJSON/" + name ?? "", true)
     request.send()
 }
 
