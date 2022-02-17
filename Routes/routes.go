@@ -200,12 +200,34 @@ func IsOut(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusBadRequest)
 }
 
-func CleanJSON(ctx *fiber.Ctx) error {
-	err := os.Remove(DatabaseFile)
-	if err != nil {
-		return err
+func CleanClass(ctx *fiber.Ctx) error {
+	var classroomName string
+	name := ctx.Locals("name")
+	nameBase64 := ctx.Params("name")
+	if len(nameBase64) > 0 {
+		nameData, err := base64.URLEncoding.DecodeString(nameBase64)
+		if err != nil {
+			return ctx.SendStatus(fiber.StatusBadRequest)
+		}
+		classroomName = string(nameData)
 	}
-	return ctx.SendStatus(fiber.StatusOK)
+
+	if len(classroomName) < 1 {
+		classroomName = name.(string)
+	}
+
+	for schoolsIndex, school := range MainGlobal.Schools {
+		for classroomsIndex, classroom := range school.Classrooms {
+			if classroom.Name == classroomName {
+				mutex.Lock()
+				MainGlobal.Schools[schoolsIndex].Classrooms[classroomsIndex].Students = models.Students{}
+				mutex.Unlock()
+				WriteJSONToFile()
+				return ctx.SendStatus(fiber.StatusOK)
+			}
+		}
+	}
+	return ctx.SendStatus(fiber.StatusNotFound)
 }
 
 func DailyRoutine() {
