@@ -13,44 +13,7 @@
 					"name": "Susie Hart",
 					"password": "JDJhJDE0JHA2OTBqZzFZMmRFVFpvM3dvdFF2ci5UdE9vVHU4MmhXcWFOL1ZFZ3FXWXVGaUNVdVhaUEdX",
 					"email": "susie.hart@rowan.kyschools.us",
-					"students": [
-						{
-							"name": "Plank, Brandon L",
-							"signedOut": "10:22 pm",
-							"signedIn": "10:23 pm",
-							"date": "02/16/2022"
-						},
-						{
-							"name": "John, Doe",
-							"signedOut": "10:19 pm",
-							"signedIn": "10:20 pm",
-							"date": "02/16/2022"
-						},
-						{
-							"name": "Plank, Brandon L",
-							"signedOut": "10:09 pm",
-							"signedIn": "10:21 pm",
-							"date": "02/16/2022"
-						},
-						{
-							"name": "Plank, Brandon L",
-							"signedOut": "10:05 pm",
-							"signedIn": "10:06 pm",
-							"date": "02/16/2022"
-						},
-						{
-							"name": "Plank, Brandon L",
-							"signedOut": "10:08 pm",
-							"signedIn": "10:09 pm",
-							"date": "02/16/2022"
-						},
-						{
-							"name": "John, Doe",
-							"signedOut": "10:20 pm",
-							"signedIn": "10:20 pm",
-							"date": "02/16/2022"
-						}
-					]
+					"students": []
 				},
 				{
 					"name": "Chris Hart",

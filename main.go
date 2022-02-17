@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"strings"
 )
 
 const Port = 8064
@@ -24,8 +25,8 @@ func Auth(name string, password string) bool {
 	} else {
 		for _, school := range routes.MainGlobal.Schools {
 			for _, classroom := range school.Classrooms {
-				if classroom.Name == name {
-					err := bcrypt.CompareHashAndPassword([]byte(classroom.Password), []byte(password))
+				if strings.ToLower(classroom.Name) == strings.ToLower(name) {
+					err := bcrypt.CompareHashAndPassword(classroom.Password, []byte(password))
 					if err != nil {
 						return false
 					}
