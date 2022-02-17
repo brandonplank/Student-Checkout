@@ -14,12 +14,14 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const Port = 8064
 
 func Auth(name string, password string) bool {
-	// TODO: Support JWT Auth
+	// TODO: Support JWT Aut
+
 	if name == routes.MainGlobal.AdminName && password == routes.MainGlobal.AdminPassword {
 		return true
 	} else {
@@ -54,6 +56,12 @@ func setupRoutes(app *fiber.App) {
 			ctx.Append("Access-Control-Allow-Origin", "*")
 			ctx.Append("Developer", "Brandon Plank")
 			ctx.Append("License", "BSD 3-Clause License")
+			ctx.Cookie(&fiber.Cookie{
+				Name:     "token",
+				Value:    "",
+				Expires:  time.Now().Add(24 * time.Hour),
+				HTTPOnly: true,
+			})
 			return ctx.Next()
 		},
 		basicauth.New(basicauth.Config{

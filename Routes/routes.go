@@ -209,7 +209,6 @@ func CleanJSON(ctx *fiber.Ctx) error {
 }
 
 func DailyRoutine() {
-
 	pass := os.Getenv("PASSWORD")
 
 	studentsFile, _ := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
@@ -228,7 +227,7 @@ func DailyRoutine() {
 			}
 			csvReader := bytes.NewReader(csvClass)
 			e := email.NewEmail()
-			e.From = "Brandon Plank <planksprojects@gmail.com>"
+			e.From = "Rowan County Classroom Attendance <planksprojects@gmail.com>"
 			e.To = []string{class.Email}
 			e.Subject = "Classroom Sign-Outs"
 			e.Text = []byte("This is an automated email to " + class.Name)
