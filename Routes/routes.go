@@ -23,7 +23,6 @@ import (
 var MainGlobal = new(models.Main)
 
 const DatabaseFile = "Storage/database.json"
-const csvFileName = "classroom.csv"
 
 var mutex sync.Mutex
 
@@ -213,7 +212,7 @@ func DailyRoutine() {
 
 	pass := os.Getenv("PASSWORD")
 
-	studentsFile, err := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
+	studentsFile, _ := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	defer studentsFile.Close()
 
 	for _, school := range MainGlobal.Schools {
@@ -240,9 +239,10 @@ func DailyRoutine() {
 			}
 		}
 	}
-
-	err = os.Remove(csvFileName)
-	if err != nil {
-		log.Println("ono")
+	for schoolsIndex, school := range MainGlobal.Schools {
+		for classroomsIndex := range school.Classrooms {
+			MainGlobal.Schools[schoolsIndex].Classrooms[classroomsIndex].Students = models.Students{}
+		}
 	}
+	WriteJSONToFile()
 }
