@@ -28,13 +28,13 @@ function sendTestContent(content) {
     request.send()
 }
 
-function cleanDatabase() {
+function cleanClass(name) {
     var request = new XMLHttpRequest();
-    console.log("Cleaning database")
+    console.log("Cleaning " + name)
     request.addEventListener("load", function () {
         getTable()
     })
-    request.open("GET", "/CleanJSON", true)
+    request.open("GET", "/CleanJSON/" + name, true)
     request.send()
 }
 
