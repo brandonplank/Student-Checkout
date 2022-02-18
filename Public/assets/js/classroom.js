@@ -112,6 +112,10 @@ function onScanSuccess(decodedText) {
             }
             return
         }
+        successNotification({
+            title: 'Success',
+            message: 'Scanned QR code'
+        })
         var request = new XMLHttpRequest()
         request.timeout = 5000
         request.addEventListener("load", sendStatusToWebPage)
