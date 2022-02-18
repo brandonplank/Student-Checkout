@@ -34,6 +34,19 @@ func Auth(name string, password string) bool {
 			context.Status(fiber.StatusUnauthorized)
 		}
 		claims := token.Claims.(*jwt.StandardClaims)
+
+		err = claims.Valid()
+		if err != nil {
+			// destroy token
+			context.Cookie(&fiber.Cookie{
+				Name:     "token",
+				Value:    "",
+				Expires:  time.Now().Add(-(time.Hour * 2)),
+				HTTPOnly: true,
+			})
+			context.Status(fiber.StatusUnauthorized)
+		}
+
 		if claims.Issuer == name {
 			return true
 		}
