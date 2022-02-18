@@ -37,23 +37,6 @@ func Auth(name string, password string) bool {
 		if claims.Issuer == name {
 			return true
 		}
-	} else {
-		claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-			Issuer:    name,
-			ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), //1 day
-		})
-
-		token, err := claims.SignedString([]byte(Key))
-		if err != nil {
-			log.Println(err)
-		}
-
-		context.Cookie(&fiber.Cookie{
-			Name:     "token",
-			Value:    token,
-			Expires:  time.Now().Add(24 * time.Hour),
-			HTTPOnly: true,
-		})
 	}
 
 	if name == routes.MainGlobal.AdminName && password == routes.MainGlobal.AdminPassword {
@@ -66,6 +49,22 @@ func Auth(name string, password string) bool {
 					if err != nil {
 						return false
 					}
+					claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+						Issuer:    name,
+						ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), //1 day
+					})
+
+					token, err := claims.SignedString([]byte(Key))
+					if err != nil {
+						log.Println(err)
+					}
+
+					context.Cookie(&fiber.Cookie{
+						Name:     "token",
+						Value:    token,
+						Expires:  time.Now().Add(24 * time.Hour),
+						HTTPOnly: true,
+					})
 					return true
 				}
 			}

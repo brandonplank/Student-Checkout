@@ -102,7 +102,7 @@ function onScanSuccess(decodedText) {
         lastResult = decodedText
         setTimeout(function () {
             lastResult = null
-        }, 60*1000)
+        }, 30*1000)
         if(!verifyName(decodedText)) {
             if(!DoIfAdminQR(decodedText)) {
                 errorNotification({
