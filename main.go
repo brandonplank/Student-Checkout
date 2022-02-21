@@ -54,6 +54,7 @@ func Auth(name string, password string) bool {
 		if claims.Issuer == name {
 			return true
 		}
+		return false
 	}
 
 	if name == routes.MainGlobal.AdminName && password == routes.MainGlobal.AdminPassword {
