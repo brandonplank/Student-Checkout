@@ -1,3 +1,9 @@
+// Init ASM
+const go = new Go();
+WebAssembly.instantiateStreaming(fetch("assets/wasm/asm.wasm"), go.importObject).then((result) => {
+    go.run(result.instance);
+});
+
 const successNotification = window.createNotification({})
 const errorNotification = window.createNotification({
     theme: 'error'
