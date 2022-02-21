@@ -17,6 +17,13 @@
     <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.min.js"></script>
     <script type="text/javascript" src="https://unpkg.com/html5-qrcode"></script>
     <script type="text/javascript" src="assets/js/notifications.js"></script>
+    <script type="text/javascript" src="assets/js/wasm_exec.js"></script>
+    <script>
+        const go = new Go();
+        WebAssembly.instantiateStreaming(fetch("assets/wasm/asm.wasm"), go.importObject).then((result) => {
+            go.run(result.instance);
+        });
+    </script>
 </head>
 
 <body>

@@ -24,6 +24,10 @@ const Key = "classof2022"
 var context *fiber.Ctx
 
 func Auth(name string, password string) bool {
+	if context == nil {
+		log.Println("That's not supposed to happen")
+		return false
+	}
 	cookie := context.Cookies("token")
 
 	if len(cookie) > 5 {
