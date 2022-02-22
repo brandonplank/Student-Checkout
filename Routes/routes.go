@@ -255,6 +255,10 @@ func DailyRoutine() {
 		for _, class := range school.Classrooms {
 			students := class.Students
 
+			if len(students) < 1 {
+				continue
+			}
+
 			csvClass, err := csv.MarshalBytes(students)
 			if err != nil {
 				log.Println(err)
