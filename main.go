@@ -119,7 +119,7 @@ func setupRoutes(app *fiber.App) {
 		func(ctx *fiber.Ctx) error {
 			ctx.Append("Access-Control-Allow-Origin", "*")
 			ctx.Append("Developer", "Brandon Plank")
-			ctx.Append("License", "BSD 3-Clause License")
+			ctx.Append("License", "GNU Affero General Public License v3.0")
 			context = ctx
 			return ctx.Next()
 		},
