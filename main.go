@@ -30,7 +30,7 @@ func Auth(name string, password string) bool {
 					if password == classroom.Password {
 						return true
 					}
-					return true
+					return false
 				}
 			}
 		}
