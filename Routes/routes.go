@@ -89,7 +89,22 @@ func IsStudentOut(name string, students []models.Student) bool {
 }
 
 func Home(ctx *fiber.Ctx) error {
-	return ctx.Render("main", fiber.Map{"year": time.Now().Format("2006")})
+	name := ctx.Locals("name")
+	logoURL := "assets/img/viking_logo.png"
+	for _, school := range MainGlobal.Schools {
+		for _, classroom := range school.Classrooms {
+			if classroom.Name == name {
+				if len(school.Logo) > 0 {
+					logoURL = school.Logo
+					break
+				}
+			}
+		}
+	}
+	return ctx.Render("main", fiber.Map{
+		"year": time.Now().Format("2006"),
+		"logo": logoURL,
+	})
 }
 
 func Id(ctx *fiber.Ctx) error {

@@ -11,6 +11,7 @@ type Main struct {
 
 type School struct {
 	Name          string      `csv:"Name" json:"name"`
+	Logo          string      `csv:"Logo" json:"logo"`
 	AdminName     string      `csv:"Admin Name" json:"adminName"`
 	AdminPassword string      `csv:"Admin Password" json:"adminPassword"`
 	AdminEmail    string      `csv:"Email" json:"email"`
