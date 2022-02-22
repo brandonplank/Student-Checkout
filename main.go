@@ -2,7 +2,6 @@ package main
 
 import (
 	"brandonplank.org/checkout/routes"
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -10,12 +9,10 @@ import (
 	"github.com/gofiber/template/html"
 	"github.com/joho/godotenv"
 	"github.com/mileusna/crontab"
-	"golang.org/x/crypto/bcrypt"
 	"log"
 	"os"
 	"strconv"
 	"strings"
-	"time"
 )
 
 const Port = 8064
@@ -24,70 +21,85 @@ const Key = "classof2022"
 var context *fiber.Ctx
 
 func Auth(name string, password string) bool {
-	if context == nil {
-		log.Println("That's not supposed to happen")
-		return false
-	}
-	cookie := context.Cookies("token")
-
-	if len(cookie) > 5 {
-		token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
-			return []byte(Key), nil
-		})
-		if err != nil {
-			context.Status(fiber.StatusUnauthorized)
-		}
-		claims := token.Claims.(*jwt.StandardClaims)
-
-		err = claims.Valid()
-		if err != nil {
-			// destroy token
-			context.Cookie(&fiber.Cookie{
-				Name:     "token",
-				Value:    "",
-				Expires:  time.Now().Add(-(time.Hour * 2)),
-				HTTPOnly: true,
-			})
-			context.Status(fiber.StatusUnauthorized)
-		}
-
-		if claims.Issuer == name {
-			return true
-		}
-		return false
-	}
-
 	if name == routes.MainGlobal.AdminName && password == routes.MainGlobal.AdminPassword {
 		return true
 	} else {
 		for _, school := range routes.MainGlobal.Schools {
 			for _, classroom := range school.Classrooms {
 				if strings.ToLower(classroom.Name) == strings.ToLower(name) {
-					err := bcrypt.CompareHashAndPassword(classroom.Password, []byte(password))
-					if err != nil {
-						return false
+					if password == classroom.Password {
+						return true
 					}
-					claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
-						Issuer:    name,
-						ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), //1 day
-					})
-
-					token, err := claims.SignedString([]byte(Key))
-					if err != nil {
-						log.Println(err)
-					}
-
-					context.Cookie(&fiber.Cookie{
-						Name:     "token",
-						Value:    token,
-						Expires:  time.Now().Add(24 * time.Hour),
-						HTTPOnly: true,
-					})
 					return true
 				}
 			}
 		}
 	}
+
+	//if context == nil {
+	//	log.Println("That's not supposed to happen")
+	//	return false
+	//}
+	//cookie := context.Cookies("token")
+	//
+	//if len(cookie) > 5 {
+	//	token, err := jwt.ParseWithClaims(cookie, &jwt.StandardClaims{}, func(token *jwt.Token) (interface{}, error) {
+	//		return []byte(Key), nil
+	//	})
+	//	if err != nil {
+	//		context.Status(fiber.StatusUnauthorized)
+	//	}
+	//	claims := token.Claims.(*jwt.StandardClaims)
+	//
+	//	err = claims.Valid()
+	//	if err != nil {
+	//		// destroy token
+	//		context.Cookie(&fiber.Cookie{
+	//			Name:     "token",
+	//			Value:    "",
+	//			Expires:  time.Now().Add(-(time.Hour * 2)),
+	//			HTTPOnly: true,
+	//		})
+	//		context.Status(fiber.StatusUnauthorized)
+	//	}
+	//
+	//	if claims.Issuer == name {
+	//		return true
+	//	}
+	//	return false
+	//}
+	//
+	//if name == routes.MainGlobal.AdminName && password == routes.MainGlobal.AdminPassword {
+	//	return true
+	//} else {
+	//	for _, school := range routes.MainGlobal.Schools {
+	//		for _, classroom := range school.Classrooms {
+	//			if strings.ToLower(classroom.Name) == strings.ToLower(name) {
+	//				err := bcrypt.CompareHashAndPassword(classroom.Password, []byte(password))
+	//				if err != nil {
+	//					return false
+	//				}
+	//				claims := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.StandardClaims{
+	//					Issuer:    name,
+	//					ExpiresAt: time.Now().Add(time.Hour * 24).Unix(), //1 day
+	//				})
+	//
+	//				token, err := claims.SignedString([]byte(Key))
+	//				if err != nil {
+	//					log.Println(err)
+	//				}
+	//
+	//				context.Cookie(&fiber.Cookie{
+	//					Name:     "token",
+	//					Value:    token,
+	//					Expires:  time.Now().Add(24 * time.Hour),
+	//					HTTPOnly: true,
+	//				})
+	//				return true
+	//			}
+	//		}
+	//	}
+	//}
 	return false
 }
 

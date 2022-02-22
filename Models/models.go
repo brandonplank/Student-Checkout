@@ -19,7 +19,7 @@ type School struct {
 
 type Classroom struct {
 	Name     string    `csv:"Name" json:"name"`
-	Password []byte    `csv:"Password" json:"password"`
+	Password string    `csv:"Password" json:"password"`
 	Email    string    `csv:"Email" json:"email"`
 	Students []Student `csv:"Students" json:"students"`
 }
