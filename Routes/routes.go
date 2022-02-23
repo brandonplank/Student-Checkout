@@ -245,11 +245,48 @@ func CleanClass(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusNotFound)
 }
 
+func DoesSchoolHaveStudents(classes []models.Classroom) bool {
+	for _, class := range classes {
+		if len(class.Students) > 0 {
+			return true
+		}
+	}
+	return false
+}
+
 func DailyRoutine() {
 	pass := os.Getenv("PASSWORD")
 
 	studentsFile, _ := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	defer studentsFile.Close()
+
+	e := email.NewEmail()
+	e.From = "Classroom Attendance <planksprojects@gmail.com>"
+	e.Subject = "Classroom Sign-Outs"
+
+	csvSchool, err := csv.MarshalBytes(MainGlobal)
+	if err != nil {
+		log.Println(err)
+	}
+	csvSchoolReader := bytes.NewReader(csvSchool)
+	e.To = []string{MainGlobal.AdminEmail}
+	e.Text = []byte("This is an automated email to " + MainGlobal.AdminName)
+	e.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", MainGlobal.AdminName), "text/csv")
+	err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+
+	for _, school := range MainGlobal.Schools {
+		if DoesSchoolHaveStudents(school.Classrooms) {
+			csvSchool, err := csv.MarshalBytes(school)
+			if err != nil {
+				log.Println(err)
+			}
+			csvSchoolReader := bytes.NewReader(csvSchool)
+			e.To = []string{school.AdminEmail}
+			e.Text = []byte("This is an automated email to " + school.Name)
+			e.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", school.Name), "text/csv")
+			err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+		}
+	}
 
 	for _, school := range MainGlobal.Schools {
 		for _, class := range school.Classrooms {
@@ -267,10 +304,7 @@ func DailyRoutine() {
 				continue
 			}
 			csvReader := bytes.NewReader(csvClass)
-			e := email.NewEmail()
-			e.From = "Rowan County Classroom Attendance <planksprojects@gmail.com>"
 			e.To = []string{class.Email}
-			e.Subject = "Classroom Sign-Outs"
 			e.Text = []byte("This is an automated email to " + class.Name)
 			e.Attach(csvReader, fmt.Sprintf("%s.csv", class.Name), "text/csv")
 			err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
