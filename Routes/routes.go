@@ -276,11 +276,6 @@ func DailyRoutine() {
 
 	for _, school := range MainGlobal.Schools {
 		if DoesSchoolHaveStudents(school.Classrooms) {
-			csvSchool, err := csv.MarshalBytes(school)
-			if err != nil {
-				log.Println(err)
-			}
-			csvSchoolReader := bytes.NewReader(csvSchool)
 			e.To = []string{school.AdminEmail}
 			e.Text = []byte("This is an automated email to " + school.Name)
 			e.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", school.Name), "text/csv")
