@@ -254,6 +254,14 @@ func DoesSchoolHaveStudents(classes []models.Classroom) bool {
 	return false
 }
 
+func CleanStudents() {
+	for schoolsIndex, school := range MainGlobal.Schools {
+		for classroomsIndex := range school.Classrooms {
+			MainGlobal.Schools[schoolsIndex].Classrooms[classroomsIndex].Students = models.Students{}
+		}
+	}
+}
+
 func DailyRoutine() {
 	pass := os.Getenv("PASSWORD")
 
@@ -308,10 +316,6 @@ func DailyRoutine() {
 			}
 		}
 	}
-	for schoolsIndex, school := range MainGlobal.Schools {
-		for classroomsIndex := range school.Classrooms {
-			MainGlobal.Schools[schoolsIndex].Classrooms[classroomsIndex].Students = models.Students{}
-		}
-	}
+	CleanStudents()
 	WriteJSONToFile()
 }

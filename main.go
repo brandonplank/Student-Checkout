@@ -163,6 +163,10 @@ func main() {
 		routes.DailyRoutine()
 	})
 
+	ctab.MustAddJob("0 0 * * 1-5", func() { // 12:00 AM every weekday
+		routes.CleanStudents()
+	})
+
 	engine := html.New("./Resources/Views", ".html")
 	router := fiber.New(fiber.Config{DisableStartupMessage: true, Views: engine})
 	setupRoutes(router)
