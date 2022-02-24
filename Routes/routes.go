@@ -272,7 +272,7 @@ func DailyRoutine() {
 	e.From = "Classroom Attendance <planksprojects@gmail.com>"
 	e.Subject = "Classroom Sign-Outs"
 
-	csvSchool, err := csv.MarshalBytes(MainGlobal)
+	csvSchool, err := csv.MarshalBytes(MainGlobal.Schools)
 	if err != nil {
 		log.Println(err)
 	}
