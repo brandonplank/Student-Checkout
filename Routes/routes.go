@@ -284,21 +284,22 @@ func DailyRoutine() {
 
 	for _, school := range MainGlobal.Schools {
 		if DoesSchoolHaveStudents(school.Classrooms) {
-			e.To = []string{school.AdminEmail}
-			e.Text = []byte("This is an automated email to " + school.Name)
-			e.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", school.Name), "text/csv")
-			err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+			schoolEmail := email.NewEmail()
+			schoolEmail.From = "Classroom Attendance <planksprojects@gmail.com>"
+			schoolEmail.Subject = "Classroom Sign-Outs"
+			schoolEmail.To = []string{school.AdminEmail}
+			schoolEmail.Text = []byte("This is an automated email to " + school.Name)
+			schoolEmail.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", school.Name), "text/csv")
+			err = schoolEmail.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
 		}
 	}
 
 	for _, school := range MainGlobal.Schools {
 		for _, class := range school.Classrooms {
 			students := class.Students
-
 			if len(students) < 1 {
 				continue
 			}
-
 			csvClass, err := csv.MarshalBytes(students)
 			if err != nil {
 				log.Println(err)
@@ -307,10 +308,13 @@ func DailyRoutine() {
 				continue
 			}
 			csvReader := bytes.NewReader(csvClass)
-			e.To = []string{class.Email}
-			e.Text = []byte("This is an automated email to " + class.Name)
-			e.Attach(csvReader, fmt.Sprintf("%s.csv", class.Name), "text/csv")
-			err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+			classroomEmail := email.NewEmail()
+			classroomEmail.From = "Classroom Attendance <planksprojects@gmail.com>"
+			classroomEmail.Subject = "Classroom Sign-Outs"
+			classroomEmail.To = []string{class.Email}
+			classroomEmail.Text = []byte("This is an automated email to " + class.Name)
+			classroomEmail.Attach(csvReader, fmt.Sprintf("%s.csv", class.Name), "text/csv")
+			err = classroomEmail.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
 			if err != nil {
 				log.Println(err)
 			}
