@@ -268,19 +268,19 @@ func DailyRoutine() {
 	studentsFile, _ := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	defer studentsFile.Close()
 
-	e := email.NewEmail()
-	e.From = "Classroom Attendance <planksprojects@gmail.com>"
-	e.Subject = "Classroom Sign-Outs"
+	adminEmail := email.NewEmail()
+	adminEmail.From = "Classroom Attendance <planksprojects@gmail.com>"
+	adminEmail.Subject = "Classroom Sign-Outs"
 
 	csvSchool, err := csv.MarshalBytes(MainGlobal.Schools)
 	if err != nil {
 		log.Println(err)
 	}
 	csvSchoolReader := bytes.NewReader(csvSchool)
-	e.To = []string{MainGlobal.AdminEmail}
-	e.Text = []byte("This is an automated email to " + MainGlobal.AdminName)
-	e.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", MainGlobal.AdminName), "text/csv")
-	err = e.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+	adminEmail.To = []string{MainGlobal.AdminEmail}
+	adminEmail.Text = []byte("This is an automated email to " + MainGlobal.AdminName)
+	adminEmail.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", MainGlobal.AdminName), "text/csv")
+	err = adminEmail.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
 
 	for _, school := range MainGlobal.Schools {
 		if DoesSchoolHaveStudents(school.Classrooms) {
