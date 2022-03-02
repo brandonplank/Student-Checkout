@@ -16,6 +16,7 @@ import (
 	"os"
 	"reflect"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 )
@@ -39,6 +40,15 @@ func WriteJSONToFile() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func IsAdmin(name string) bool {
+	for _, school := range MainGlobal.Schools {
+		if strings.ToLower(name) == strings.ToLower(school.AdminName) {
+			return true
+		}
+	}
+	return false
 }
 
 func ReadJSONToStruct() {
@@ -101,6 +111,14 @@ func Home(ctx *fiber.Ctx) error {
 			}
 		}
 	}
+
+	if IsAdmin(name.(string)) {
+		return ctx.Render("admin", fiber.Map{
+			"year": time.Now().Format("2006"),
+			"logo": logoURL,
+		})
+	}
+
 	return ctx.Render("main", fiber.Map{
 		"year": time.Now().Format("2006"),
 		"logo": logoURL,
@@ -166,6 +184,27 @@ func GetCSV(ctx *fiber.Ctx) error {
 					return ctx.Send(content)
 				}
 			}
+		}
+	}
+	return ctx.SendStatus(fiber.StatusInternalServerError)
+}
+
+func GetAdminCSV(ctx *fiber.Ctx) error {
+	for _, school := range MainGlobal.Schools {
+		if len(school.Classrooms) > 0 {
+			var allStudents models.Students
+			for _, classroom := range school.Classrooms {
+				if len(classroom.Students) < 1 {
+					continue
+				}
+				for _, student := range classroom.Students {
+					allStudents = append(allStudents, student)
+				}
+			}
+			sort.Sort(allStudents)
+			ReverseSlice(allStudents)
+			content, _ := csv.MarshalBytes(allStudents)
+			return ctx.Send(content)
 		}
 	}
 	return ctx.SendStatus(fiber.StatusInternalServerError)
@@ -283,13 +322,30 @@ func DailyRoutine() {
 	err = adminEmail.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
 
 	for _, school := range MainGlobal.Schools {
+		if len(school.AdminEmail) < 1 || len(school.AdminName) < 1 || len(school.AdminPassword) < 1 {
+			continue
+		}
 		if DoesSchoolHaveStudents(school.Classrooms) {
+			var allStudents models.Students
+			for _, classroom := range school.Classrooms {
+				if len(classroom.Students) < 1 {
+					continue
+				}
+				for _, student := range classroom.Students {
+					allStudents = append(allStudents, student)
+				}
+			}
+			sort.Sort(allStudents)
+			ReverseSlice(allStudents)
+			content, _ := csv.MarshalBytes(allStudents)
+			csvReader := bytes.NewReader(content)
+
 			schoolEmail := email.NewEmail()
 			schoolEmail.From = "Classroom Attendance <planksprojects@gmail.com>"
 			schoolEmail.Subject = "Classroom Sign-Outs"
 			schoolEmail.To = []string{school.AdminEmail}
 			schoolEmail.Text = []byte("This is an automated email to " + school.Name)
-			schoolEmail.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", school.Name), "text/csv")
+			schoolEmail.Attach(csvReader, fmt.Sprintf("%s.csv", school.Name), "text/csv")
 			err = schoolEmail.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
 		}
 	}

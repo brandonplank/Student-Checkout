@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+    <title>Admin Panel</title>
+    <link rel="stylesheet" href="assets/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/Footer-Dark.css">
+    <link rel="stylesheet" href="assets/css/Navigation-Clean.css">
+    <link rel="stylesheet" href="assets/css/styles.css">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/webrtc-adapter/3.3.3/adapter.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/4.1.2/papaparse.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.1.10/vue.min.js"></script>
+</head>
+
+<body>
+<nav class="navbar navbar-light navbar-expand-lg navigation-clean">
+    <div class="container"><a class="navbar-brand" href="#" style="margin-left: 33px;"><img style="width: 31px;height: 40px;" src="{{.logo}}">&nbsp; &nbsp;Classroom Sign-out Admin Panel</a>
+        <a href="/admin.csv">Download CSV</a>
+    </div>
+</nav>
+<div style="margin-top: 50px;">
+    <div class="container">
+        <div class="row">
+            <div class="table-responsive">
+                <table class="table"></table>
+            </div>
+        </div>
+    </div>
+</div>
+<div></div>
+<div>
+    <footer class="footer-dark" style="height: 110.5px;">
+        <div class="container">
+            <p class="copyright" style="padding-top: 0px;"><strong>Brandon Plank © {{.year}}, Go Vikings!</strong></p>
+        </div>
+    </footer>
+</div>
+<script type="text/javascript" src="assets/bootstrap/js/bootstrap.min.js"></script>
+<script type="text/javascript" src="assets/js/admin.js"></script>
+</body>
+</html>
