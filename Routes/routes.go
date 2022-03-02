@@ -179,8 +179,8 @@ func GetCSV(ctx *fiber.Ctx) error {
 					var students models.PublicStudents
 					students = models.StudentsToPublicStudents(classroom.Students)
 					sort.Sort(students)
-					ReverseSlice(classroom.Students)
-					content, _ := csv.MarshalBytes(classroom.Students)
+					ReverseSlice(students)
+					content, _ := csv.MarshalBytes(students)
 					return ctx.Send(content)
 				}
 			}
