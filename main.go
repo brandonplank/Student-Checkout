@@ -25,6 +25,11 @@ func Auth(name string, password string) bool {
 		return true
 	} else {
 		for _, school := range routes.MainGlobal.Schools {
+			if strings.ToLower(school.AdminName) == strings.ToLower(name) {
+				if password == school.AdminPassword {
+					return true
+				}
+			}
 			for _, classroom := range school.Classrooms {
 				if strings.ToLower(classroom.Name) == strings.ToLower(name) {
 					if password == classroom.Password {
