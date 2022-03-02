@@ -231,6 +231,27 @@ func CSVFile(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusBadRequest)
 }
 
+func AdminCSVFile(ctx *fiber.Ctx) error {
+	name := ctx.Locals("name")
+	for _, school := range MainGlobal.Schools {
+		for _, classroom := range school.Classrooms {
+			if classroom.Name == name {
+				var students models.Students
+				students = classroom.Students
+				sort.Sort(students)
+				studentsBytes, err := csv.MarshalBytes(students)
+				if err != nil {
+					return ctx.SendStatus(fiber.StatusBadRequest)
+				}
+				ctx.Append("Content-Disposition", "attachment; filename=\"classroom.csv\"")
+				ctx.Append("Content-Type", "text/csv")
+				return ctx.Send(studentsBytes)
+			}
+		}
+	}
+	return ctx.SendStatus(fiber.StatusBadRequest)
+}
+
 func IsOut(ctx *fiber.Ctx) error {
 	nameBase64 := ctx.Params("name")
 	nameData, err := base64.URLEncoding.DecodeString(nameBase64)
@@ -376,6 +397,5 @@ func DailyRoutine() {
 			}
 		}
 	}
-	CleanStudents()
 	WriteJSONToFile()
 }
