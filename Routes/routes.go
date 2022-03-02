@@ -156,7 +156,7 @@ func Id(ctx *fiber.Ctx) error {
 				} else {
 					log.Println(studentName, "has left")
 					mutex.Lock()
-					MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Students = append(classroom.Students, models.Student{Name: studentName, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006")})
+					MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Students = append(classroom.Students, models.Student{Name: studentName, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006"), Classroom: classroom.Name})
 					mutex.Unlock()
 				}
 				WriteJSONToFile()
@@ -176,8 +176,8 @@ func GetCSV(ctx *fiber.Ctx) error {
 					if len(classroom.Students) < 1 {
 						return ctx.SendString("No students yet")
 					}
-					var students models.Students
-					students = classroom.Students
+					var students models.PublicStudents
+					students = models.StudentsToPublicStudents(classroom.Students)
 					sort.Sort(students)
 					ReverseSlice(classroom.Students)
 					content, _ := csv.MarshalBytes(classroom.Students)
@@ -245,8 +245,8 @@ func CSVFile(ctx *fiber.Ctx) error {
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
 			if classroom.Name == name {
-				var students models.Students
-				students = classroom.Students
+				var students models.PublicStudents
+				students = models.StudentsToPublicStudents(classroom.Students)
 				sort.Sort(students)
 				studentsBytes, err := csv.MarshalBytes(students)
 				if err != nil {

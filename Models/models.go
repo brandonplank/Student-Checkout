@@ -25,14 +25,22 @@ type Classroom struct {
 	Students []Student `csv:"Students" json:"students"`
 }
 
-type Student struct {
+type PublicStudent struct {
 	Name    string `csv:"Name" json:"name"`
 	SignOut string `csv:"Signed Out" json:"signedOut"`
 	SignIn  string `csv:"Signed In" json:"signedIn"`
 	Date    string `csv:"Date" json:"date"`
 }
+type Student struct {
+	Name      string `csv:"Name" json:"name"`
+	SignOut   string `csv:"Signed Out" json:"signedOut"`
+	SignIn    string `csv:"Signed In" json:"signedIn"`
+	Date      string `csv:"Date" json:"date"`
+	Classroom string `csv:"Classroom" json:"classroom"`
+}
 
 type Students []Student
+type PublicStudents []PublicStudent
 
 func (p Students) Len() int {
 	return len(p)
@@ -46,4 +54,26 @@ func (p Students) Less(i, j int) bool {
 
 func (p Students) Swap(i, j int) {
 	p[i], p[j] = p[j], p[i]
+}
+
+func (p PublicStudents) Len() int {
+	return len(p)
+}
+
+func (p PublicStudents) Less(i, j int) bool {
+	time1, _ := time.Parse("3:04 pm", p[i].SignOut)
+	time2, _ := time.Parse("3:04 pm", p[j].SignOut)
+	return time1.Before(time2)
+}
+
+func (p PublicStudents) Swap(i, j int) {
+	p[i], p[j] = p[j], p[i]
+}
+
+func StudentsToPublicStudents(students Students) PublicStudents {
+	var publicStudents PublicStudents
+	for _, student := range students {
+		publicStudents = append(publicStudents, PublicStudent{Name: student.Name, SignOut: student.SignOut, SignIn: student.SignIn, Date: student.Date})
+	}
+	return publicStudents
 }
