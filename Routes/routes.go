@@ -210,6 +210,36 @@ func GetAdminCSV(ctx *fiber.Ctx) error {
 	return ctx.SendStatus(fiber.StatusInternalServerError)
 }
 
+func AdminSearchStudent(ctx *fiber.Ctx) error {
+	nameBase64 := ctx.Params("name")
+	nameData, err := base64.URLEncoding.DecodeString(nameBase64)
+	if err != nil {
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
+	studentName := string(nameData)
+
+	for _, school := range MainGlobal.Schools {
+		if len(school.Classrooms) > 0 {
+			var allStudents models.Students
+			for _, classroom := range school.Classrooms {
+				if len(classroom.Students) < 1 {
+					continue
+				}
+				for _, student := range classroom.Students {
+					if strings.Contains(strings.ToLower(student.Name), strings.ToLower(studentName)) {
+						allStudents = append(allStudents, student)
+					}
+				}
+			}
+			sort.Sort(allStudents)
+			ReverseSlice(allStudents)
+			content, _ := csv.MarshalBytes(allStudents)
+			return ctx.Send(content)
+		}
+	}
+	return ctx.SendStatus(fiber.StatusInternalServerError)
+}
+
 func CSVFile(ctx *fiber.Ctx) error {
 	name := ctx.Locals("name")
 	for _, school := range MainGlobal.Schools {
@@ -232,21 +262,23 @@ func CSVFile(ctx *fiber.Ctx) error {
 }
 
 func AdminCSVFile(ctx *fiber.Ctx) error {
-	name := ctx.Locals("name")
 	for _, school := range MainGlobal.Schools {
-		for _, classroom := range school.Classrooms {
-			if classroom.Name == name {
-				var students models.Students
-				students = classroom.Students
-				sort.Sort(students)
-				studentsBytes, err := csv.MarshalBytes(students)
-				if err != nil {
-					return ctx.SendStatus(fiber.StatusBadRequest)
+		if len(school.Classrooms) > 0 {
+			var allStudents models.Students
+			for _, classroom := range school.Classrooms {
+				if len(classroom.Students) < 1 {
+					continue
 				}
-				ctx.Append("Content-Disposition", "attachment; filename=\"classroom.csv\"")
-				ctx.Append("Content-Type", "text/csv")
-				return ctx.Send(studentsBytes)
+				for _, student := range classroom.Students {
+					allStudents = append(allStudents, student)
+				}
 			}
+			sort.Sort(allStudents)
+			ReverseSlice(allStudents)
+			content, _ := csv.MarshalBytes(allStudents)
+			ctx.Append("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.csv\"", school.Name))
+			ctx.Append("Content-Type", "text/csv")
+			return ctx.Send(content)
 		}
 	}
 	return ctx.SendStatus(fiber.StatusBadRequest)

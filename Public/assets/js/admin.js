@@ -22,6 +22,18 @@ function getTable() {
     })
 }
 
+function SearchStudent() {
+    var name = document.getElementById('name').value;
+    document.getElementById('name').value = "";
+    $.ajax({
+        type: "POST",
+        url: "/search/" + btoa(name),
+        success: function (data) {
+            $('table').replaceWith(arrayToTable(Papa.parse(data).data))
+        }
+    })
+}
+
 // Run this automatically on page load
 getTable()
 
