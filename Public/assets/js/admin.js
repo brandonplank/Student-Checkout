@@ -23,7 +23,8 @@ function getTable() {
 }
 
 function SearchStudent() {
-    var name = document.getElementById('name').value;
+    var name = document.getElementById('name').value
+    console.log("Searching for", name)
     document.getElementById('name').value = "";
     $.ajax({
         type: "POST",
@@ -33,6 +34,12 @@ function SearchStudent() {
         }
     })
 }
+
+$('#name').keypress(function(e){
+    if (e.which === 13) {
+        SearchStudent()
+    }
+});
 
 // Run this automatically on page load
 getTable()
