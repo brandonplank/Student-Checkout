@@ -9,6 +9,19 @@ const errorNotification = window.createNotification({
     theme: 'error'
 })
 
+// Scheduler
+function runAtTime(method, hour, minute, second) {
+    (function loop() {
+        var now = new Date();
+        if (now.getHours() === hour && now.getMinutes() === minute && now.getSeconds() === second) {
+            method();
+        }
+        now = new Date();
+        var delay = 60000 - (now % 60000);
+        setTimeout(loop, delay);
+    })();
+}
+
 // CSV Table fetcher
 function getTable() {
     $.ajax({
@@ -23,28 +36,33 @@ function getTable() {
 // Run this automatically on page load
 getTable()
 
+//Run at midnight
+runAtTime(getTable, 0, 0, 0)
+
 function sendTestContent(content) {
-    var request = new XMLHttpRequest();
-    console.log("Going to send", content)
-    request.addEventListener("load", function () {
-        console.log(request.status)
-        getTable()
+    $.ajax({
+        type: "POST",
+        url: "/id/" + btoa(content),
+        success: function (data) {
+            console.log(data)
+            getTable()
+        }
     })
-    request.open("POST", "/id/" + btoa(content), true)
-    request.send()
 }
 
 function cleanClass(name) {
-    var request = new XMLHttpRequest();
     if(typeof name == 'undefined') {
         name = ""
     }
     console.log("Cleaning " + name)
-    request.addEventListener("load", function () {
-        getTable()
+    $.ajax({
+        type: "GET",
+        url: "/CleanClass/" + name,
+        success: function (data) {
+            console.log(data)
+            getTable()
+        }
     })
-    request.open("GET", "/CleanClass/", true)
-    request.send()
 }
 
 function arrayToTable(tableData) {
@@ -62,9 +80,8 @@ function arrayToTable(tableData) {
 }
 
 // QR Code scanner
-
-function sendStatusToWebPage() {
-    let parsedJson = JSON.parse(this.responseText)
+function sendStatusToWebPage(data) {
+    let parsedJson = JSON.parse(JSON.stringify(data))
     if(parsedJson.isOut) {
         successNotification({
             title: 'Signed back in',
@@ -76,13 +93,14 @@ function sendStatusToWebPage() {
             message: parsedJson.name + ' has signed out'
         })
     }
-
-    let request = new XMLHttpRequest()
-    request.addEventListener("load", function () {
-        getTable()
+    $.ajax({
+        type: "POST",
+        url: "/id/" + btoa(parsedJson.name),
+        success: function (dataPost) {
+            console.log(dataPost)
+            getTable()
+        }
     })
-    request.open("POST", "/id/" + btoa(parsedJson.name))
-    request.send()
 }
 
 function DoIfAdminQR(content) {
@@ -108,7 +126,7 @@ function onScanSuccess(decodedText) {
         lastResult = decodedText
         setTimeout(function () {
             lastResult = null
-        }, 30*1000)
+        }, 10*1000)
         if(!verifyName(decodedText)) {
             if(!DoIfAdminQR(decodedText)) {
                 errorNotification({
@@ -118,15 +136,15 @@ function onScanSuccess(decodedText) {
             }
             return
         }
-        successNotification({
-            title: 'Success',
-            message: 'Scanned QR code'
+        // successNotification({
+        //     title: 'Success',
+        //     message: 'Scanned QR code'
+        // })
+        $.ajax({
+            type: "POST",
+            url: "/isOut/" + btoa(decodedText),
+            success: sendStatusToWebPage
         })
-        var request = new XMLHttpRequest()
-        request.timeout = 5000
-        request.addEventListener("load", sendStatusToWebPage)
-        request.open("POST", "/isOut/" + btoa(decodedText))
-        request.send()
     }
 }
 
