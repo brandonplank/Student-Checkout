@@ -360,20 +360,6 @@ func DailyRoutine() {
 	studentsFile, _ := os.OpenFile(DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	defer studentsFile.Close()
 
-	adminEmail := email.NewEmail()
-	adminEmail.From = "Classroom Attendance <planksprojects@gmail.com>"
-	adminEmail.Subject = "Classroom Sign-Outs"
-
-	csvSchool, err := csv.MarshalBytes(MainGlobal.Schools)
-	if err != nil {
-		log.Println(err)
-	}
-	csvSchoolReader := bytes.NewReader(csvSchool)
-	adminEmail.To = []string{MainGlobal.AdminEmail}
-	adminEmail.Text = []byte("This is an automated email to " + MainGlobal.AdminName)
-	adminEmail.Attach(csvSchoolReader, fmt.Sprintf("%s.csv", MainGlobal.AdminName), "text/csv")
-	err = adminEmail.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
-
 	for _, school := range MainGlobal.Schools {
 		if len(school.AdminEmail) < 1 || len(school.AdminName) < 1 || len(school.AdminPassword) < 1 {
 			continue
@@ -399,7 +385,10 @@ func DailyRoutine() {
 			schoolEmail.To = []string{school.AdminEmail}
 			schoolEmail.Text = []byte("This is an automated email to " + school.Name)
 			schoolEmail.Attach(csvReader, fmt.Sprintf("%s.csv", school.Name), "text/csv")
-			err = schoolEmail.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+			err := schoolEmail.Send("smtp.gmail.com:587", smtp.PlainAuth("", "planksprojects@gmail.com", pass, "smtp.gmail.com"))
+			if err != nil {
+				log.Println(err)
+			}
 		}
 	}
 

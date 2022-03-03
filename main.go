@@ -2,6 +2,7 @@ package main
 
 import (
 	"brandonplank.org/checkout/routes"
+	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/basicauth"
 	"github.com/gofiber/fiber/v2/middleware/cors"
@@ -13,6 +14,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 )
 
 const Port = 8064
@@ -152,7 +154,19 @@ func setupRoutes(app *fiber.App) {
 func main() {
 	log.Println("[START] Starting student checkout server")
 
-	err := godotenv.Load()
+	err := sentry.Init(sentry.ClientOptions{
+		Dsn:   "https://f98a7533c0e5433eb0eb89b4f97e5ece@o956450.ingest.sentry.io/6240133",
+		Debug: false,
+	})
+	if err != nil {
+		log.Println(err)
+	}
+
+	defer sentry.Flush(2 * time.Second)
+	defer sentry.Recover()
+	log.Println("[START] Started Sentry")
+
+	err = godotenv.Load()
 	if err != nil {
 		log.Fatal("[ERROR] Error loading .env file")
 	}
