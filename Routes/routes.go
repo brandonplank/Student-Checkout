@@ -354,6 +354,16 @@ func CleanStudents() {
 	}
 }
 
+func AddTeacher(ctx *fiber.Ctx) error {
+	var payload map[string]interface{}
+	err := ctx.BodyParser(&payload)
+	if err != nil {
+		return err
+	}
+	//TeacherName := payload["name"]
+	return nil
+}
+
 func DailyRoutine() {
 	pass := os.Getenv("PASSWORD")
 
