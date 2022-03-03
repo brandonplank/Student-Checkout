@@ -35,6 +35,39 @@ function SearchStudent() {
     })
 }
 
+function addTeacher(name, email) {
+    console.log("Adding", name)
+    $.ajax({
+        type: "POST",
+        url: "/addTeacher",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify({
+            "name": name,
+            "email": email
+        }),
+        success: function (data) {
+        }
+    })
+}
+
+function removeTeacher(name) {
+    console.log("Removing", name)
+    $.ajax({
+        type: "POST",
+        url: "/removeTeacher",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify({
+            "name": name,
+        }),
+        success: function (data) {
+        }
+    })
+}
+
 $('#name').keypress(function(e){
     if (e.which === 13) {
         SearchStudent()

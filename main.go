@@ -23,17 +23,17 @@ const Key = "classof2022"
 var context *fiber.Ctx
 
 func Auth(name string, password string) bool {
-	if (strings.ToLower(name) == strings.ToLower(routes.MainGlobal.AdminName) && password == routes.MainGlobal.AdminPassword) || (strings.ToLower(name) == strings.ToLower(routes.MainGlobal.AdminEmail) && password == routes.MainGlobal.AdminPassword) {
+	if strings.ToLower(name) == strings.ToLower(routes.MainGlobal.AdminName) && password == routes.MainGlobal.AdminPassword {
 		return true
 	} else {
 		for _, school := range routes.MainGlobal.Schools {
-			if strings.ToLower(school.AdminName) == strings.ToLower(name) || strings.ToLower(name) == strings.ToLower(school.AdminEmail) {
+			if strings.ToLower(school.AdminName) == strings.ToLower(name) {
 				if password == school.AdminPassword {
 					return true
 				}
 			}
 			for _, classroom := range school.Classrooms {
-				if strings.ToLower(classroom.Name) == strings.ToLower(name) || name == routes.MainGlobal.AdminEmail && password == routes.MainGlobal.AdminPassword {
+				if strings.ToLower(classroom.Name) == strings.ToLower(name) {
 					if password == classroom.Password {
 						return true
 					}
@@ -149,6 +149,8 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/CleanClass/:name", routes.CleanClass)
 	app.Get("/classroom.csv", routes.CSVFile)
 	app.Get("/admin.csv", routes.AdminCSVFile)
+	app.Post("/addTeacher", routes.AddTeacher)
+	app.Post("/removeTeacher", routes.RemoveTeacher)
 }
 
 func main() {
