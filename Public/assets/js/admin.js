@@ -77,8 +77,8 @@ $('#name').keypress(function(e){
 // Run this automatically on page load
 getTable()
 
-//Run at midnight
-runAtTime(getTable, 0, 0, 0)
+// Run every 10 seconds
+setInterval(getTable, 1000 * 30);
 
 function arrayToTable(tableData) {
     var table = $('<table class="table"></table>');
