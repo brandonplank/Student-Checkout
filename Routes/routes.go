@@ -51,6 +51,25 @@ func IsAdmin(name string) bool {
 	return false
 }
 
+func getNameFromEmail(email string) (error, string) {
+	email = strings.ToLower(email)
+	if strings.ToLower(email) == strings.ToLower(MainGlobal.AdminEmail) {
+		return nil, MainGlobal.AdminName
+	}
+
+	for _, school := range MainGlobal.Schools {
+		if strings.ToLower(email) == strings.ToLower(school.AdminEmail) {
+			return nil, school.AdminName
+		}
+		for _, classroom := range school.Classrooms {
+			if classroom.Email == email {
+				return nil, classroom.Name
+			}
+		}
+	}
+	return errors.New("could not find email"), ""
+}
+
 func ReadJSONToStruct() {
 	content, _ := ioutil.ReadFile(DatabaseFile)
 	if len(content) <= 1 {
@@ -100,6 +119,11 @@ func IsStudentOut(name string, students []models.Student) bool {
 
 func Home(ctx *fiber.Ctx) error {
 	name := ctx.Locals("name")
+	err, name := getNameFromEmail(name.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
 	logoURL := "assets/img/viking_logo.png"
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
@@ -127,6 +151,11 @@ func Home(ctx *fiber.Ctx) error {
 
 func Id(ctx *fiber.Ctx) error {
 	name := ctx.Locals("name")
+	err, name := getNameFromEmail(name.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
 
 	nameBase64 := ctx.Params("name")
 	nameData, err := base64.URLEncoding.DecodeString(nameBase64)
@@ -169,6 +198,12 @@ func Id(ctx *fiber.Ctx) error {
 
 func GetCSV(ctx *fiber.Ctx) error {
 	name := ctx.Locals("name")
+	err, name := getNameFromEmail(name.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
+	log.Println(name)
 	for _, school := range MainGlobal.Schools {
 		if len(school.Classrooms) > 0 {
 			for _, classroom := range school.Classrooms {
@@ -242,6 +277,11 @@ func AdminSearchStudent(ctx *fiber.Ctx) error {
 
 func CSVFile(ctx *fiber.Ctx) error {
 	name := ctx.Locals("name")
+	err, name := getNameFromEmail(name.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
 			if classroom.Name == name {
@@ -293,6 +333,11 @@ func IsOut(ctx *fiber.Ctx) error {
 	studentName := string(nameData)
 
 	name := ctx.Locals("name")
+	err, name = getNameFromEmail(name.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
 			if classroom.Name == name {
@@ -310,6 +355,11 @@ func IsOut(ctx *fiber.Ctx) error {
 func CleanClass(ctx *fiber.Ctx) error {
 	var classroomName string
 	name := ctx.Locals("name")
+	err, name := getNameFromEmail(name.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
 	nameBase64 := ctx.Params("name")
 	if len(nameBase64) > 0 {
 		nameData, err := base64.URLEncoding.DecodeString(nameBase64)
@@ -356,8 +406,13 @@ func CleanStudents() {
 
 func AddTeacher(ctx *fiber.Ctx) error {
 	name := ctx.Locals("name")
+	err, name := getNameFromEmail(name.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
 	payloadP := new(map[string]interface{})
-	err := ctx.BodyParser(&payloadP)
+	err = ctx.BodyParser(&payloadP)
 	if err != nil {
 		return err
 	}
@@ -380,8 +435,13 @@ func remove(slice []models.Classroom, s int) []models.Classroom {
 
 func RemoveTeacher(ctx *fiber.Ctx) error {
 	name := ctx.Locals("name")
+	err, name := getNameFromEmail(name.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
 	payloadP := new(map[string]interface{})
-	err := ctx.BodyParser(payloadP)
+	err = ctx.BodyParser(payloadP)
 	if err != nil {
 		return err
 	}
