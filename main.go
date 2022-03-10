@@ -66,7 +66,7 @@ func setupRoutes(app *fiber.App) {
 		},
 		basicauth.New(basicauth.Config{
 			Authorizer:      Auth,
-			ContextUsername: "name",
+			ContextUsername: "email",
 		}),
 	)
 
@@ -85,6 +85,7 @@ func setupRoutes(app *fiber.App) {
 	app.Get("/admin.csv", routes.AdminCSVFile)
 	app.Post("/addTeacher", routes.AddTeacher)
 	app.Post("/removeTeacher", routes.RemoveTeacher)
+	app.Post("/changePassword", routes.ChangePassword)
 }
 
 func main() {

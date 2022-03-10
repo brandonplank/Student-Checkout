@@ -157,6 +157,23 @@ Html5Qrcode.getCameras().then(devices => {
     console.error(err)
 });
 
+function changePassword(currentPassword, newPassword) {
+    $.ajax({
+        type: "POST",
+        url: "/changePassword",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify({
+            "currentPassword": currentPassword,
+            "newPassword": newPassword
+        }),
+        success: function (data) {
+        }
+    })
+}
+
+
 const html5QrCode = new Html5Qrcode("qr-reader", { formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ] })
 const config = { fps: 60, qrbox: 250 }
 html5QrCode.start({ facingMode: "user" }, config, onScanSuccess)

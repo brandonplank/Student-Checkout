@@ -9,7 +9,7 @@ import (
 	"fmt"
 	csv "github.com/gocarina/gocsv"
 	"github.com/gofiber/fiber/v2"
-	"github.com/jordan-wright/email"
+	emailClient "github.com/jordan-wright/email"
 	"io/ioutil"
 	"log"
 	"net/smtp"
@@ -118,8 +118,8 @@ func IsStudentOut(name string, students []models.Student) bool {
 }
 
 func Home(ctx *fiber.Ctx) error {
-	name := ctx.Locals("name")
-	err, name := getNameFromEmail(name.(string))
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
 	if err != nil {
 		log.Println(err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
@@ -136,7 +136,7 @@ func Home(ctx *fiber.Ctx) error {
 		}
 	}
 
-	if IsAdmin(name.(string)) {
+	if IsAdmin(name) {
 		return ctx.Render("admin", fiber.Map{
 			"year": time.Now().Format("2006"),
 			"logo": logoURL,
@@ -150,8 +150,8 @@ func Home(ctx *fiber.Ctx) error {
 }
 
 func Id(ctx *fiber.Ctx) error {
-	name := ctx.Locals("name")
-	err, name := getNameFromEmail(name.(string))
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
 	if err != nil {
 		log.Println(err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
@@ -197,13 +197,12 @@ func Id(ctx *fiber.Ctx) error {
 }
 
 func GetCSV(ctx *fiber.Ctx) error {
-	name := ctx.Locals("name")
-	err, name := getNameFromEmail(name.(string))
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
 	if err != nil {
 		log.Println(err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
 	}
-	log.Println(name)
 	for _, school := range MainGlobal.Schools {
 		if len(school.Classrooms) > 0 {
 			for _, classroom := range school.Classrooms {
@@ -276,8 +275,8 @@ func AdminSearchStudent(ctx *fiber.Ctx) error {
 }
 
 func CSVFile(ctx *fiber.Ctx) error {
-	name := ctx.Locals("name")
-	err, name := getNameFromEmail(name.(string))
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
 	if err != nil {
 		log.Println(err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
@@ -332,8 +331,8 @@ func IsOut(ctx *fiber.Ctx) error {
 	}
 	studentName := string(nameData)
 
-	name := ctx.Locals("name")
-	err, name = getNameFromEmail(name.(string))
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
 	if err != nil {
 		log.Println(err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
@@ -354,8 +353,8 @@ func IsOut(ctx *fiber.Ctx) error {
 
 func CleanClass(ctx *fiber.Ctx) error {
 	var classroomName string
-	name := ctx.Locals("name")
-	err, name := getNameFromEmail(name.(string))
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
 	if err != nil {
 		log.Println(err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
@@ -370,7 +369,7 @@ func CleanClass(ctx *fiber.Ctx) error {
 	}
 
 	if len(classroomName) < 1 {
-		classroomName = name.(string)
+		classroomName = name
 	}
 
 	for schoolsIndex, school := range MainGlobal.Schools {
@@ -405,8 +404,8 @@ func CleanStudents() {
 }
 
 func AddTeacher(ctx *fiber.Ctx) error {
-	name := ctx.Locals("name")
-	err, name := getNameFromEmail(name.(string))
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
 	if err != nil {
 		log.Println(err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
@@ -434,8 +433,8 @@ func remove(slice []models.Classroom, s int) []models.Classroom {
 }
 
 func RemoveTeacher(ctx *fiber.Ctx) error {
-	name := ctx.Locals("name")
-	err, name := getNameFromEmail(name.(string))
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
 	if err != nil {
 		log.Println(err)
 		return ctx.SendStatus(fiber.StatusBadRequest)
@@ -456,6 +455,38 @@ func RemoveTeacher(ctx *fiber.Ctx) error {
 					WriteJSONToFile()
 					return ctx.SendStatus(fiber.StatusOK)
 				}
+			}
+		}
+	}
+	return ctx.SendStatus(fiber.StatusBadRequest)
+}
+
+func ChangePassword(ctx *fiber.Ctx) error {
+	email := ctx.Locals("email")
+	err, name := getNameFromEmail(email.(string))
+	if err != nil {
+		log.Println(err)
+		return ctx.SendStatus(fiber.StatusBadRequest)
+	}
+
+	payload := struct {
+		CurrentPassword string `json:"currentPassword"`
+		NewPassword     string `json:"newPassword"`
+	}{}
+	err = ctx.BodyParser(&payload)
+	if err != nil {
+		return err
+	}
+
+	for schoolIndex, school := range MainGlobal.Schools {
+		for classroomIndex, classroom := range school.Classrooms {
+			if strings.ToLower(name) == strings.ToLower(classroom.Name) {
+				if payload.CurrentPassword != MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Password {
+					return ctx.SendStatus(fiber.StatusUnauthorized)
+				}
+				MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Password = payload.NewPassword
+				WriteJSONToFile()
+				return ctx.SendStatus(fiber.StatusOK)
 			}
 		}
 	}
@@ -487,7 +518,7 @@ func DailyRoutine() {
 			content, _ := csv.MarshalBytes(allStudents)
 			csvReader := bytes.NewReader(content)
 
-			schoolEmail := email.NewEmail()
+			schoolEmail := emailClient.NewEmail()
 			schoolEmail.From = "Classroom Attendance <planksprojects@gmail.com>"
 			schoolEmail.Subject = "Classroom Sign-Outs"
 			schoolEmail.To = []string{school.AdminEmail}
@@ -514,7 +545,7 @@ func DailyRoutine() {
 				continue
 			}
 			csvReader := bytes.NewReader(csvClass)
-			classroomEmail := email.NewEmail()
+			classroomEmail := emailClient.NewEmail()
 			classroomEmail.From = "Classroom Attendance <planksprojects@gmail.com>"
 			classroomEmail.Subject = "Classroom Sign-Outs"
 			classroomEmail.To = []string{class.Email}
