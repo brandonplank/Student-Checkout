@@ -10,4 +10,4 @@ build:
 	@chmod +x checkout
 run:
 	@GOOS=js GOARCH=wasm go build -o Public/assets/wasm/asm.wasm bin/webasm/main.go
-	go run .
+	@go run .
