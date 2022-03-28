@@ -151,11 +151,6 @@ func Home(ctx *fiber.Ctx) error {
 
 func Id(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
 
 	nameBase64 := ctx.Params("name")
 	nameData, err := base64.URLEncoding.DecodeString(nameBase64)
@@ -167,7 +162,7 @@ func Id(ctx *fiber.Ctx) error {
 
 	for schoolIndex, school := range MainGlobal.Schools {
 		for classroomIndex, classroom := range school.Classrooms {
-			if classroom.Name == name {
+			if classroom.Email == email {
 				if IsStudentOut(studentName, classroom.Students) {
 					log.Println(studentName, "has returned")
 					var tempStudents []models.Student
@@ -198,15 +193,10 @@ func Id(ctx *fiber.Ctx) error {
 
 func GetCSV(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
 	for _, school := range MainGlobal.Schools {
 		if len(school.Classrooms) > 0 {
 			for _, classroom := range school.Classrooms {
-				if classroom.Name == name {
+				if classroom.Email == email {
 					if len(classroom.Students) < 1 {
 						return ctx.SendString("No students yet")
 					}
@@ -276,14 +266,9 @@ func AdminSearchStudent(ctx *fiber.Ctx) error {
 
 func CSVFile(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if classroom.Name == name {
+			if classroom.Email == email {
 				var students models.PublicStudents
 				students = models.StudentsToPublicStudents(classroom.Students)
 				sort.Sort(students)
@@ -332,14 +317,9 @@ func IsOut(ctx *fiber.Ctx) error {
 	studentName := string(nameData)
 
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if classroom.Name == name {
+			if classroom.Email == email {
 				type out struct {
 					IsOut bool   `json:"isOut"`
 					Name  string `json:"name"`
@@ -352,29 +332,24 @@ func IsOut(ctx *fiber.Ctx) error {
 }
 
 func CleanClass(ctx *fiber.Ctx) error {
-	var classroomName string
+	var classroomEmail string
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
-	nameBase64 := ctx.Params("name")
-	if len(nameBase64) > 0 {
-		nameData, err := base64.URLEncoding.DecodeString(nameBase64)
+	emailBase64 := ctx.Params("email")
+	if len(emailBase64) > 0 {
+		emailData, err := base64.URLEncoding.DecodeString(emailBase64)
 		if err != nil {
 			return ctx.SendStatus(fiber.StatusBadRequest)
 		}
-		classroomName = string(nameData)
+		classroomEmail = string(emailData)
 	}
 
-	if len(classroomName) < 1 {
-		classroomName = name
+	if len(classroomEmail) < 1 {
+		classroomEmail = email.(string)
 	}
 
 	for schoolsIndex, school := range MainGlobal.Schools {
 		for classroomsIndex, classroom := range school.Classrooms {
-			if classroom.Name == classroomName {
+			if classroom.Email == classroomEmail {
 				mutex.Lock()
 				MainGlobal.Schools[schoolsIndex].Classrooms[classroomsIndex].Students = models.Students{}
 				mutex.Unlock()
@@ -434,23 +409,18 @@ func remove(slice []models.Classroom, s int) []models.Classroom {
 
 func RemoveTeacher(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
 	payloadP := new(map[string]interface{})
-	err = ctx.BodyParser(payloadP)
+	err := ctx.BodyParser(payloadP)
 	if err != nil {
 		return err
 	}
 	payload := *payloadP
-	TeacherName := payload["name"]
-	log.Println("Removing", TeacherName)
+	TeacherEmail := payload["email"]
+	log.Println("Removing", TeacherEmail)
 	for schoolIndex, school := range MainGlobal.Schools {
-		if school.AdminName == name {
+		if school.AdminEmail == email {
 			for classroomIndex, classroom := range school.Classrooms {
-				if strings.ToLower(TeacherName.(string)) == strings.ToLower(classroom.Name) {
+				if strings.ToLower(TeacherEmail.(string)) == strings.ToLower(classroom.Email) {
 					MainGlobal.Schools[schoolIndex].Classrooms = remove(MainGlobal.Schools[schoolIndex].Classrooms, classroomIndex)
 					WriteJSONToFile()
 					return ctx.SendStatus(fiber.StatusOK)
@@ -463,24 +433,19 @@ func RemoveTeacher(ctx *fiber.Ctx) error {
 
 func ChangePassword(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
 
 	payload := struct {
 		CurrentPassword string `json:"currentPassword"`
 		NewPassword     string `json:"newPassword"`
 	}{}
-	err = ctx.BodyParser(&payload)
+	err := ctx.BodyParser(&payload)
 	if err != nil {
 		return err
 	}
 
 	for schoolIndex, school := range MainGlobal.Schools {
 		for classroomIndex, classroom := range school.Classrooms {
-			if strings.ToLower(name) == strings.ToLower(classroom.Name) {
+			if strings.ToLower(email.(string)) == strings.ToLower(classroom.Email) {
 				if payload.CurrentPassword != MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Password {
 					return ctx.SendStatus(fiber.StatusUnauthorized)
 				}

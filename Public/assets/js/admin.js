@@ -52,8 +52,8 @@ function addTeacher(name, email) {
     })
 }
 
-function removeTeacher(name) {
-    console.log("Removing", name)
+function removeTeacher(email) {
+    console.log("Removing", email)
     $.ajax({
         type: "POST",
         url: "/removeTeacher",
@@ -61,7 +61,7 @@ function removeTeacher(name) {
             "Content-Type": "application/json"
         },
         data: JSON.stringify({
-            "name": name,
+            "email": email,
         }),
         success: function (data) {
         }
