@@ -65,6 +65,39 @@ function cleanClass(name) {
     })
 }
 
+function addTeacher(name, email) {
+    console.log("Adding", name)
+    $.ajax({
+        type: "POST",
+        url: "/addTeacher",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify({
+            "name": name,
+            "email": email
+        }),
+        success: function (data) {
+        }
+    })
+}
+
+function removeTeacher(email) {
+    console.log("Removing", email)
+    $.ajax({
+        type: "POST",
+        url: "/removeTeacher",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        data: JSON.stringify({
+            "email": email,
+        }),
+        success: function (data) {
+        }
+    })
+}
+
 function arrayToTable(tableData) {
     var table = $('<table class="table"></table>');
     $(tableData).each(function (i, rowData) {
