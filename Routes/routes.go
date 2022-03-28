@@ -378,15 +378,21 @@ func CleanStudents() {
 	}
 }
 
+func TeacherHasAdmin(email string) bool {
+	for _, school := range MainGlobal.Schools {
+		for _, classroom := range school.Classrooms {
+			if strings.ToLower(email) == strings.ToLower(classroom.Email) {
+				return classroom.IsAdmin
+			}
+		}
+	}
+	return false
+}
+
 func AddTeacher(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
 	payloadP := new(map[string]interface{})
-	err = ctx.BodyParser(&payloadP)
+	err := ctx.BodyParser(&payloadP)
 	if err != nil {
 		return err
 	}
@@ -394,7 +400,7 @@ func AddTeacher(ctx *fiber.Ctx) error {
 	TeacherName := payload["name"]
 	TeacherEmail := payload["email"]
 	for schoolIndex, school := range MainGlobal.Schools {
-		if school.AdminName == name {
+		if school.AdminEmail == email || TeacherHasAdmin(email.(string)) {
 			MainGlobal.Schools[schoolIndex].Classrooms = append(MainGlobal.Schools[schoolIndex].Classrooms, models.Classroom{Name: TeacherName.(string), Email: TeacherEmail.(string), Password: "govikings2022", Students: models.Students{}})
 			WriteJSONToFile()
 			return ctx.SendStatus(fiber.StatusOK)
@@ -418,7 +424,7 @@ func RemoveTeacher(ctx *fiber.Ctx) error {
 	TeacherEmail := payload["email"]
 	log.Println("Removing", TeacherEmail)
 	for schoolIndex, school := range MainGlobal.Schools {
-		if school.AdminEmail == email {
+		if school.AdminEmail == email || TeacherHasAdmin(email.(string)) {
 			for classroomIndex, classroom := range school.Classrooms {
 				if strings.ToLower(TeacherEmail.(string)) == strings.ToLower(classroom.Email) {
 					MainGlobal.Schools[schoolIndex].Classrooms = remove(MainGlobal.Schools[schoolIndex].Classrooms, classroomIndex)

@@ -22,6 +22,7 @@ type Classroom struct {
 	Name     string    `csv:"Name" json:"name"`
 	Password string    `csv:"Password" json:"password"`
 	Email    string    `csv:"Email" json:"email"`
+	IsAdmin  bool      `csv:"IsAdmin" json:"isAdmin"`
 	Students []Student `csv:"Students" json:"students"`
 }
 
