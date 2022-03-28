@@ -140,7 +140,7 @@ func Id(ctx *fiber.Ctx) error {
 		for classroomIndex, classroom := range school.Classrooms {
 			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
 				if IsStudentOut(studentName, classroom.Students) {
-					log.Println(studentName, "has returned")
+					log.Println(fmt.Sprintf("%s has retured to %s's classroom", studentName, classroom.Name))
 					var tempStudents []models.Student
 					for _, stu := range classroom.Students {
 						if stu.Name == studentName {
@@ -154,7 +154,7 @@ func Id(ctx *fiber.Ctx) error {
 					MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Students = tempStudents
 					mutex.Unlock()
 				} else {
-					log.Println(studentName, "has left")
+					log.Println(fmt.Sprintf("%s has left from %s's classroom", studentName, classroom.Name))
 					mutex.Lock()
 					MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Students = append(classroom.Students, models.Student{Name: studentName, SignOut: time.Now().Format("3:04 pm"), SignIn: "Signed Out", Date: time.Now().Format("01/02/2006"), Classroom: classroom.Name})
 					mutex.Unlock()
@@ -295,7 +295,7 @@ func IsOut(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if classroom.Email == email {
+			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
 				type out struct {
 					IsOut bool   `json:"isOut"`
 					Name  string `json:"name"`
@@ -325,7 +325,7 @@ func CleanClass(ctx *fiber.Ctx) error {
 
 	for schoolsIndex, school := range MainGlobal.Schools {
 		for classroomsIndex, classroom := range school.Classrooms {
-			if classroom.Email == classroomEmail {
+			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
 				mutex.Lock()
 				MainGlobal.Schools[schoolsIndex].Classrooms[classroomsIndex].Students = models.Students{}
 				mutex.Unlock()
