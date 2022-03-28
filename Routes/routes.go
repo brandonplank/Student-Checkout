@@ -42,32 +42,13 @@ func WriteJSONToFile() {
 	}
 }
 
-func IsAdmin(name string) bool {
+func IsAdmin(email string) bool {
 	for _, school := range MainGlobal.Schools {
-		if strings.ToLower(name) == strings.ToLower(school.AdminName) {
+		if strings.ToLower(email) == strings.ToLower(school.AdminEmail) {
 			return true
 		}
 	}
 	return false
-}
-
-func getNameFromEmail(email string) (error, string) {
-	email = strings.ToLower(email)
-	if strings.ToLower(email) == strings.ToLower(MainGlobal.AdminEmail) {
-		return nil, MainGlobal.AdminName
-	}
-
-	for _, school := range MainGlobal.Schools {
-		if strings.ToLower(email) == strings.ToLower(school.AdminEmail) {
-			return nil, school.AdminName
-		}
-		for _, classroom := range school.Classrooms {
-			if classroom.Email == email {
-				return nil, classroom.Name
-			}
-		}
-	}
-	return errors.New("could not find email"), ""
 }
 
 func ReadJSONToStruct() {
@@ -119,15 +100,10 @@ func IsStudentOut(name string, students []models.Student) bool {
 
 func Home(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
-	err, name := getNameFromEmail(email.(string))
-	if err != nil {
-		log.Println(err)
-		return ctx.SendStatus(fiber.StatusBadRequest)
-	}
 	logoURL := "assets/img/viking_logo.png"
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if classroom.Name == name {
+			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
 				if len(school.Logo) > 0 {
 					logoURL = school.Logo
 					break
@@ -136,7 +112,7 @@ func Home(ctx *fiber.Ctx) error {
 		}
 	}
 
-	if IsAdmin(name) {
+	if IsAdmin(email.(string)) {
 		return ctx.Render("admin", fiber.Map{
 			"year": time.Now().Format("2006"),
 			"logo": logoURL,
@@ -162,7 +138,7 @@ func Id(ctx *fiber.Ctx) error {
 
 	for schoolIndex, school := range MainGlobal.Schools {
 		for classroomIndex, classroom := range school.Classrooms {
-			if classroom.Email == email {
+			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
 				if IsStudentOut(studentName, classroom.Students) {
 					log.Println(studentName, "has returned")
 					var tempStudents []models.Student
@@ -196,7 +172,7 @@ func GetCSV(ctx *fiber.Ctx) error {
 	for _, school := range MainGlobal.Schools {
 		if len(school.Classrooms) > 0 {
 			for _, classroom := range school.Classrooms {
-				if classroom.Email == email {
+				if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
 					if len(classroom.Students) < 1 {
 						return ctx.SendString("No students yet")
 					}
@@ -268,7 +244,7 @@ func CSVFile(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if classroom.Email == email {
+			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
 				var students models.PublicStudents
 				students = models.StudentsToPublicStudents(classroom.Students)
 				sort.Sort(students)
@@ -400,7 +376,7 @@ func AddTeacher(ctx *fiber.Ctx) error {
 	TeacherName := payload["name"]
 	TeacherEmail := payload["email"]
 	for schoolIndex, school := range MainGlobal.Schools {
-		if school.AdminEmail == email || TeacherHasAdmin(email.(string)) {
+		if strings.ToLower(school.AdminEmail) == strings.ToLower(email.(string)) || TeacherHasAdmin(email.(string)) {
 			MainGlobal.Schools[schoolIndex].Classrooms = append(MainGlobal.Schools[schoolIndex].Classrooms, models.Classroom{Name: TeacherName.(string), Email: TeacherEmail.(string), Password: "govikings2022", Students: models.Students{}})
 			WriteJSONToFile()
 			return ctx.SendStatus(fiber.StatusOK)
@@ -424,7 +400,7 @@ func RemoveTeacher(ctx *fiber.Ctx) error {
 	TeacherEmail := payload["email"]
 	log.Println("Removing", TeacherEmail)
 	for schoolIndex, school := range MainGlobal.Schools {
-		if school.AdminEmail == email || TeacherHasAdmin(email.(string)) {
+		if strings.ToLower(school.AdminName) == strings.ToLower(email.(string)) || TeacherHasAdmin(email.(string)) {
 			for classroomIndex, classroom := range school.Classrooms {
 				if strings.ToLower(TeacherEmail.(string)) == strings.ToLower(classroom.Email) {
 					MainGlobal.Schools[schoolIndex].Classrooms = remove(MainGlobal.Schools[schoolIndex].Classrooms, classroomIndex)
