@@ -13,7 +13,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -23,17 +22,17 @@ const Key = "classof2022"
 var context *fiber.Ctx
 
 func Auth(email string, password string) bool {
-	if strings.ToLower(email) == strings.ToLower(routes.MainGlobal.AdminEmail) && password == routes.MainGlobal.AdminPassword {
+	if routes.SanitizeString(email) == routes.SanitizeString(routes.MainGlobal.AdminEmail) && password == routes.MainGlobal.AdminPassword {
 		return true
 	} else {
 		for _, school := range routes.MainGlobal.Schools {
-			if strings.ToLower(email) == strings.ToLower(school.AdminEmail) {
+			if routes.SanitizeString(email) == routes.SanitizeString(school.AdminEmail) {
 				if password == school.AdminPassword {
 					return true
 				}
 			}
 			for _, classroom := range school.Classrooms {
-				if strings.ToLower(classroom.Email) == strings.ToLower(email) {
+				if routes.SanitizeString(classroom.Email) == routes.SanitizeString(email) {
 					if password == classroom.Password {
 						return true
 					}

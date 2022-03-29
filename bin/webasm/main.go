@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"syscall/js"
 )
 
 func main() {
@@ -12,5 +13,7 @@ func main() {
 	for i := 0; i < 10; i++ {
 		fmt.Print("*")
 	}
+	document := js.Global().Get("document")
+	log.Println(document)
 	<-make(chan bool)
 }

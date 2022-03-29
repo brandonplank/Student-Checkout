@@ -42,9 +42,13 @@ func WriteJSONToFile() {
 	}
 }
 
+func SanitizeString(s string) string {
+	return strings.ReplaceAll(strings.ToLower(s), " ", "")
+}
+
 func IsAdmin(email string) bool {
 	for _, school := range MainGlobal.Schools {
-		if strings.ToLower(email) == strings.ToLower(school.AdminEmail) {
+		if SanitizeString(email) == SanitizeString(school.AdminEmail) {
 			return true
 		}
 	}
@@ -103,7 +107,7 @@ func Home(ctx *fiber.Ctx) error {
 	logoURL := "assets/img/viking_logo.png"
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
+			if SanitizeString(classroom.Email) == SanitizeString(email.(string)) {
 				if len(school.Logo) > 0 {
 					logoURL = school.Logo
 					break
@@ -138,7 +142,7 @@ func Id(ctx *fiber.Ctx) error {
 
 	for schoolIndex, school := range MainGlobal.Schools {
 		for classroomIndex, classroom := range school.Classrooms {
-			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
+			if SanitizeString(classroom.Email) == SanitizeString(email.(string)) {
 				if IsStudentOut(studentName, classroom.Students) {
 					log.Println(fmt.Sprintf("%s has retured to %s's classroom", studentName, classroom.Name))
 					var tempStudents []models.Student
@@ -172,7 +176,7 @@ func GetCSV(ctx *fiber.Ctx) error {
 	for _, school := range MainGlobal.Schools {
 		if len(school.Classrooms) > 0 {
 			for _, classroom := range school.Classrooms {
-				if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
+				if SanitizeString(classroom.Email) == SanitizeString(email.(string)) {
 					if len(classroom.Students) < 1 {
 						return ctx.SendString("No students yet")
 					}
@@ -226,7 +230,7 @@ func AdminSearchStudent(ctx *fiber.Ctx) error {
 					continue
 				}
 				for _, student := range classroom.Students {
-					if strings.Contains(strings.ToLower(student.Name), strings.ToLower(studentName)) {
+					if strings.Contains(SanitizeString(student.Name), SanitizeString(studentName)) {
 						allStudents = append(allStudents, student)
 					}
 				}
@@ -244,7 +248,7 @@ func CSVFile(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
+			if SanitizeString(classroom.Email) == SanitizeString(email.(string)) {
 				var students models.PublicStudents
 				students = models.StudentsToPublicStudents(classroom.Students)
 				sort.Sort(students)
@@ -295,7 +299,7 @@ func IsOut(ctx *fiber.Ctx) error {
 	email := ctx.Locals("email")
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
+			if SanitizeString(classroom.Email) == SanitizeString(email.(string)) {
 				type out struct {
 					IsOut bool   `json:"isOut"`
 					Name  string `json:"name"`
@@ -325,7 +329,7 @@ func CleanClass(ctx *fiber.Ctx) error {
 
 	for schoolsIndex, school := range MainGlobal.Schools {
 		for classroomsIndex, classroom := range school.Classrooms {
-			if strings.ToLower(classroom.Email) == strings.ToLower(email.(string)) {
+			if SanitizeString(classroom.Email) == SanitizeString(email.(string)) {
 				mutex.Lock()
 				MainGlobal.Schools[schoolsIndex].Classrooms[classroomsIndex].Students = models.Students{}
 				mutex.Unlock()
@@ -357,7 +361,7 @@ func CleanStudents() {
 func TeacherHasAdmin(email string) bool {
 	for _, school := range MainGlobal.Schools {
 		for _, classroom := range school.Classrooms {
-			if strings.ToLower(email) == strings.ToLower(classroom.Email) {
+			if SanitizeString(email) == SanitizeString(classroom.Email) {
 				return classroom.IsAdmin
 			}
 		}
@@ -376,7 +380,7 @@ func AddTeacher(ctx *fiber.Ctx) error {
 	TeacherName := payload["name"]
 	TeacherEmail := payload["email"]
 	for schoolIndex, school := range MainGlobal.Schools {
-		if strings.ToLower(school.AdminEmail) == strings.ToLower(email.(string)) || TeacherHasAdmin(email.(string)) {
+		if SanitizeString(school.AdminEmail) == SanitizeString(email.(string)) || TeacherHasAdmin(email.(string)) {
 			MainGlobal.Schools[schoolIndex].Classrooms = append(MainGlobal.Schools[schoolIndex].Classrooms, models.Classroom{Name: TeacherName.(string), Email: TeacherEmail.(string), Password: "govikings2022", Students: models.Students{}})
 			WriteJSONToFile()
 			return ctx.SendStatus(fiber.StatusOK)
@@ -400,9 +404,9 @@ func RemoveTeacher(ctx *fiber.Ctx) error {
 	TeacherEmail := payload["email"]
 	log.Println("Removing", TeacherEmail)
 	for schoolIndex, school := range MainGlobal.Schools {
-		if strings.ToLower(school.AdminName) == strings.ToLower(email.(string)) || TeacherHasAdmin(email.(string)) {
+		if SanitizeString(school.AdminName) == SanitizeString(email.(string)) || TeacherHasAdmin(email.(string)) {
 			for classroomIndex, classroom := range school.Classrooms {
-				if strings.ToLower(TeacherEmail.(string)) == strings.ToLower(classroom.Email) {
+				if SanitizeString(TeacherEmail.(string)) == SanitizeString(classroom.Email) {
 					MainGlobal.Schools[schoolIndex].Classrooms = remove(MainGlobal.Schools[schoolIndex].Classrooms, classroomIndex)
 					WriteJSONToFile()
 					return ctx.SendStatus(fiber.StatusOK)
@@ -427,7 +431,7 @@ func ChangePassword(ctx *fiber.Ctx) error {
 
 	for schoolIndex, school := range MainGlobal.Schools {
 		for classroomIndex, classroom := range school.Classrooms {
-			if strings.ToLower(email.(string)) == strings.ToLower(classroom.Email) {
+			if SanitizeString(email.(string)) == SanitizeString(classroom.Email) {
 				if payload.CurrentPassword != MainGlobal.Schools[schoolIndex].Classrooms[classroomIndex].Password {
 					return ctx.SendStatus(fiber.StatusUnauthorized)
 				}
