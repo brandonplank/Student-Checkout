@@ -381,7 +381,7 @@ func AddTeacher(ctx *fiber.Ctx) error {
 	TeacherEmail := payload["email"]
 	for schoolIndex, school := range MainGlobal.Schools {
 		if SanitizeString(school.AdminEmail) == SanitizeString(email.(string)) || TeacherHasAdmin(email.(string)) {
-			MainGlobal.Schools[schoolIndex].Classrooms = append(MainGlobal.Schools[schoolIndex].Classrooms, models.Classroom{Name: TeacherName.(string), Email: TeacherEmail.(string), Password: "govikings2022", Students: models.Students{}})
+			MainGlobal.Schools[schoolIndex].Classrooms = append(MainGlobal.Schools[schoolIndex].Classrooms, models.Classroom{Name: TeacherName.(string), Email: SanitizeString(TeacherEmail.(string)), Password: "govikings2022", Students: models.Students{}})
 			WriteJSONToFile()
 			return ctx.SendStatus(fiber.StatusOK)
 		}

@@ -2,8 +2,15 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"log"
-	"syscall/js"
+	"net/http"
+	"os"
+	"time"
+)
+
+const (
+	apiUrl = "https://flappybird.brandonplank.org/v1/"
 )
 
 func main() {
@@ -13,7 +20,37 @@ func main() {
 	for i := 0; i < 10; i++ {
 		fmt.Print("*")
 	}
-	document := js.Global().Get("document")
-	log.Println(document)
+	fmt.Println()
+	fmt.Println("Testing call to my FlappyBird server")
+	go func() {
+		request, err := http.NewRequest("GET", apiUrl+"users", nil)
+		if err != nil {
+			log.Fatal(err)
+		}
+		timeout := 10 * time.Second
+		client := http.Client{
+			Timeout: timeout,
+		}
+		resp, err := client.Do(request)
+
+		if resp.StatusCode == 401 {
+			log.Fatal("You are not authorized to perform this action")
+			os.Exit(-1)
+		}
+
+		if resp.StatusCode == 500 {
+			log.Fatal("This was not supposed to happen, internal server error")
+			os.Exit(-1)
+		}
+
+		defer resp.Body.Close()
+		body, err := ioutil.ReadAll(resp.Body)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println(string(body))
+	}()
+	//document := js.Global().Get("document")
+	//log.Println(document)
 	<-make(chan bool)
 }
