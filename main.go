@@ -1,7 +1,10 @@
 package main
 
 import (
+	"brandonplank.org/checkout/models"
 	"brandonplank.org/checkout/routes"
+	con "context"
+	"encoding/json"
 	"github.com/getsentry/sentry-go"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/basicauth"
@@ -10,8 +13,10 @@ import (
 	"github.com/gofiber/template/html"
 	"github.com/joho/godotenv"
 	"github.com/mileusna/crontab"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 	"log"
-	"os"
 	"strconv"
 	"time"
 )
@@ -102,18 +107,40 @@ func main() {
 	defer sentry.Recover()
 	log.Println("[START] Started Sentry")
 
+	/*
+		mongodb
+	*/
+
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://mongo:KtHYMwzjcKWEtiZ5Sdpw@containers-us-west-34.railway.app:6785"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	ctx, _ := con.WithTimeout(con.Background(), 10*time.Second)
+	err = client.Connect(ctx)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer client.Disconnect(ctx)
+
+	log.Println("[START] Connected to MongoDB server")
+
+	databases, err := client.ListDatabaseNames(ctx, bson.M{})
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Println(databases)
+
 	err = godotenv.Load()
 	if err != nil {
 		log.Fatal("[ERROR] Error loading .env file")
 	}
 
-	database, err := os.OpenFile(routes.DatabaseFile, os.O_RDWR|os.O_CREATE, os.ModePerm)
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer database.Close()
+	db := client.Database("StudentCheckout").Collection("Student")
 
-	routes.ReadJSONToStruct()
+	var main models.Main
+	db.FindOne(con.TODO(), bson.D{{}}).Decode(&main)
+	j, _ := json.MarshalIndent(main, "", "\t")
+	log.Println(string(j))
 
 	ctab := crontab.New()
 
